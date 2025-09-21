@@ -24,7 +24,7 @@ export function Header() {
       {isMobile && (
         <Link href={"/"} className="ml-2 max-[430px]:hidden min-[375px]:ml-4">
           <Image
-            src={"/next.svg"}
+            src={"/trace_logo.svg"}
             width={32}
             height={32}
             alt=""
@@ -36,7 +36,7 @@ export function Header() {
       <div className="max-xl:hidden">
         <Image
           className="dark:invert"
-          src="/next.svg"
+          src="/trace_logo.svg"
           alt="Next.js logo"
           width={120}
           height={38}

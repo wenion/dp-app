@@ -17,6 +17,11 @@ export function Navigation() {
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+            <Link href="/">Home</Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
             <Link href="/dataview">DataView</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
