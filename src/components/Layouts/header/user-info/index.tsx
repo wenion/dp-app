@@ -22,8 +22,8 @@ export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
 
   const USER = {
-    name: "John Smith",
-    email: "johnson@nextadmin.com",
+    name: "Jim",
+    email: "jim.wen@monash.edu",
   };
 
   return (
