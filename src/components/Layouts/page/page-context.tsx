@@ -18,12 +18,12 @@ const PageContext = createContext<PageContextType | null>(null);
 export function usePageContext() {
   const context = useContext(PageContext);
   if (!context) {
-    throw new Error("usePageContext must be used within a PageProvider");
+    throw new Error("usePageContext must be used within a ContextProvider");
   }
   return context;
 }
 
-export function PageProvider({
+export function ContextProvider({
   children,
   defaultOpen = true,
 }: {
