@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 type PageState = "expanded" | "collapsed";
 
-type PageContextType = {
+type ContextType = {
   state: PageState;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
@@ -13,12 +13,12 @@ type PageContextType = {
   toggleSidebar: () => void;
 };
 
-const PageContext = createContext<PageContextType | null>(null);
+const Context = createContext<ContextType | null>(null);
 
-export function usePageContext() {
-  const context = useContext(PageContext);
+export function useAppContext() {
+  const context = useContext(Context);
   if (!context) {
-    throw new Error("usePageContext must be used within a ContextProvider");
+    throw new Error("useAppContext must be used within a ContextProvider");
   }
   return context;
 }
@@ -46,7 +46,7 @@ export function ContextProvider({
   }
 
   return (
-    <PageContext.Provider
+    <Context.Provider
       value={{
         state: isOpen ? "expanded" : "collapsed",
         isOpen,
@@ -56,6 +56,6 @@ export function ContextProvider({
       }}
     >
       {children}
-    </PageContext.Provider>
+    </Context.Provider>
   );
 }

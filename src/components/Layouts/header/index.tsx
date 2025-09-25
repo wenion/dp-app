@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePageContext } from "../page/page-context";
+import { useAppContext } from "../context";
 import { Navigation } from "./navigation";
 import { Notification } from "./notification";
 // import { ThemeToggleSwitch } from "./theme-toggle";
 import { UserInfo } from "./user-info";
 
 export function Header() {
-  const { toggleSidebar, isMobile } = usePageContext();
+  const { toggleSidebar, isMobile } = useAppContext();
 
   return (
     <header className="sticky top-0 z-30 cursor-pointer flex items-center justify-between border-b border-stroke bg-white px-4 py-5 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10">
