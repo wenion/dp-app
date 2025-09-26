@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { signOut, useSession } from "next-auth/react";
 import {
     LogOut as LogOutIcon,
     SettingsIcon,
@@ -20,10 +21,14 @@ import {
 
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session, status } = useSession();
+  console.log("Session data:", session);
 
-  const USER = {
-    name: "Jim",
-    email: "jim.wen@monash.edu",
+  const onSignOut = async () => {
+    if (session?.user && status === "authenticated") {
+      // if already signed in, redirect instead of signing out
+      signOut();
+    }
   };
 
   return (
@@ -35,7 +40,7 @@ export function UserInfo() {
             <AvatarFallback>Avatar</AvatarFallback>
           </Avatar>
           <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
-            <span>{USER.name}</span>
+            <span>{session?.user?.name}</span>
 
             <ChevronUpIcon
               aria-hidden
@@ -63,10 +68,10 @@ export function UserInfo() {
 
           <figcaption className="space-y-1 text-base font-medium">
             <div className="mb-2 leading-none text-dark dark:text-white">
-              {USER.name}
+              {session?.user?.name}
             </div>
 
-            <div className="leading-none text-gray-6">{USER.email}</div>
+            <div className="leading-none text-gray-6">{session?.user?.email}</div>
           </figcaption>
         </figure>
 
@@ -85,7 +90,10 @@ export function UserInfo() {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
+        <DropdownMenuItem
+          className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer"
+          onClick={onSignOut}
+        >
           <LogOutIcon />
           Log out
         </DropdownMenuItem>

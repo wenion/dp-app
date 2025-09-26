@@ -2,27 +2,26 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAppContext } from "../context";
 import { Navigation } from "./navigation";
 import { Notification } from "./notification";
 // import { ThemeToggleSwitch } from "./theme-toggle";
 import { UserInfo } from "./user-info";
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export function Header() {
-  const { toggleSidebar, isMobile } = useAppContext();
+  const { status } = useSession();
+  const { isMobile } = useAppContext();
+  const pathname = usePathname();
+
+  const loginPath = "/login";
 
   return (
     <header className="sticky top-0 z-30 cursor-pointer flex items-center justify-between border-b border-stroke bg-white px-4 py-5 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10">
-      <button
-        onClick={toggleSidebar}
-        className="rounded-lg border px-1.5 py-1 dark:border-stroke-dark dark:bg-[#020D1A] hover:dark:bg-[#FFFFFF1A] lg:hidden"
-      >
-        {/* <MenuIcon /> */}
-        <span className="sr-only">Toggle Sidebar</span>
-      </button>
-
       {isMobile && (
-        <Link href={"/"} className="ml-2 max-[430px]:hidden min-[375px]:ml-4">
+        <Link href={"/"}>
           <Image
             src={"/trace_logo.svg"}
             width={32}
@@ -33,38 +32,37 @@ export function Header() {
         </Link>
       )}
 
-      <div className="max-xl:hidden">
+      <div className="max-[850px]:hidden">
         <Image
           className="dark:invert"
           src="/trace_logo.svg"
           alt="Next.js logo"
-          width={120}
+          width={100}
           height={38}
           priority
         />
       </div>
 
-      <div className="flex flex-1 items-center pl-16 gap-2 min-[375px]:gap-4">
-        <Navigation />
-        <div className="flex flex-1 space-x-4 justify-end">
-        {/* <div className="relative w-full max-w-[300px]">
-          <input
-            type="search"
-            placeholder="Search"
-            className="flex w-full items-center gap-3.5 rounded-full border bg-gray-2 py-3 pl-[53px] pr-5 outline-none transition-colors focus-visible:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-dark-4 dark:hover:bg-dark-3 dark:hover:text-dark-6 dark:focus-visible:border-primary"
-          />
-
-          <SearchIcon className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 max-[1015px]:size-5" />
-        </div> */}
-
-        {/* <ThemeToggleSwitch /> */}
-
-          <Notification />
-
-          <div className="flex items-center justify-center">
-            <UserInfo />
+      <div className="flex flex-1 items-center pl-12 min-[375px]:pl-8 gap-2 min-[375px]:gap-4">
+        {status === "authenticated" ? (
+          <>
+            <Navigation />
+            <div className="flex flex-1 space-x-4 justify-end">
+              <Notification />
+              <UserInfo />
+            </div>
+          </>
+        ): (
+          <div className="flex flex-1 space-x-4 justify-end">
+            {pathname !== loginPath && (
+              <div className="flex flex-wrap items-center gap-2 md:flex-row">
+                <Button asChild>
+                  <Link href={loginPath}>Sign In</Link>
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </header>
   );
