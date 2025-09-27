@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,10 +34,7 @@ export function UserInfo() {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <figure className="flex items-center content-center gap-3">
-          <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>Avatar</AvatarFallback>
-          </Avatar>
+          <img src={session?.user?.image!} alt="User Avatar" className="h-10 w-10 rounded-full" />
           <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
             <span>{session?.user?.name}</span>
 
@@ -61,10 +57,7 @@ export function UserInfo() {
         <h2 className="sr-only">User information</h2>
 
         <figure className="flex items-center gap-2.5 px-5 py-3.5">
-          <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>Avatar</AvatarFallback>
-          </Avatar>
+          <img src={session?.user?.image!} alt="User Avatar" className="h-10 w-10 rounded-full" />
 
           <figcaption className="space-y-1 text-base font-medium">
             <div className="mb-2 leading-none text-dark dark:text-white">
