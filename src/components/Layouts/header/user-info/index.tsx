@@ -21,7 +21,6 @@ import {
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session, status } = useSession();
-  console.log("Session data:", session);
 
   const onSignOut = async () => {
     if (session?.user && status === "authenticated") {
