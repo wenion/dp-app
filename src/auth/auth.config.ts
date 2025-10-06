@@ -7,6 +7,14 @@ const config: NextAuthConfig = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          scope: "openid email profile",
+          access_type: "offline",
+          prompt: "consent",           // needed to (re)issue refresh_token
+          response_type: "code"
+        }
+      }
     }),
     // ...add more providers here
   ],
