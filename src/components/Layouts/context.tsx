@@ -1,16 +1,22 @@
 "use client";
 
+import { createContext, useContext, useState } from "react";
+import { Session } from "@supabase/supabase-js";
+
+import { PopupToExtensionEvent } from "@/config/eventTypes";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { createContext, useContext, useEffect, useState } from "react";
+import { useMessenger } from "@/components/useMessenger";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+
 
 type PageState = "expanded" | "collapsed";
-
 type ContextType = {
   state: PageState;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  session: Session | null;
 };
 
 const Context = createContext<ContextType | null>(null);
@@ -32,14 +38,18 @@ export function ContextProvider({
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const isMobile = useIsMobile();
+  const [session, setSession] = useState<Session | null>(null);
+  const { sendMessage } = useMessenger();
 
-  useEffect(() => {
-    if (isMobile) {
-      setIsOpen(false);
+  useSupabaseSession((event, session) => {
+    console.log("Auth event:", event, "Session:", session);
+    setSession(session);
+    if (session) {
+      sendMessage(PopupToExtensionEvent.USER_LOGIN, session);
     } else {
-      setIsOpen(true);
+      sendMessage(PopupToExtensionEvent.USER_LOGOUT, session);
     }
-  }, [isMobile]);
+  });
 
   function toggleSidebar() {
     setIsOpen((prev) => !prev);
@@ -53,6 +63,7 @@ export function ContextProvider({
         setIsOpen,
         isMobile,
         toggleSidebar,
+        session,
       }}
     >
       {children}

@@ -1,5 +1,13 @@
 "use client";
 
+import { useState } from "react";
+import {
+    LogOut as LogOutIcon,
+    SettingsIcon,
+    User as UserIcon,
+    ChevronUp as ChevronUpIcon,
+} from "lucide-react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,34 +16,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { signOut, useSession } from "next-auth/react";
-import {
-    LogOut as LogOutIcon,
-    SettingsIcon,
-    User as UserIcon,
-    ChevronUp as ChevronUpIcon,
-} from "lucide-react";
+import { signout } from "@/utils/supabase/action";
 
-export function UserInfo() {
+export function UserInfo({
+  image,
+  name,
+  email,
+}: {
+  image?: string;
+  name?: string;
+  email?: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: session, status } = useSession();
-
-  const onSignOut = async () => {
-    if (session?.user && status === "authenticated") {
-      // if already signed in, redirect instead of signing out
-      signOut();
-    }
-  };
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <figure className="flex items-center content-center gap-3">
-          <img src={session?.user?.image!} alt="User Avatar" className="h-10 w-10 rounded-full" />
+          {image && (
+            <img src={image} alt="User Avatar" className="h-10 w-10 rounded-full" />
+          )}
           <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
-            <span>{session?.user?.name}</span>
+            <span>{name}</span>
 
             <ChevronUpIcon
               aria-hidden
@@ -56,14 +60,11 @@ export function UserInfo() {
         <h2 className="sr-only">User information</h2>
 
         <figure className="flex items-center gap-2.5 px-5 py-3.5">
-          <img src={session?.user?.image!} alt="User Avatar" className="h-10 w-10 rounded-full" />
+          {/* <img src={session?.user?.image!} alt="User Avatar" className="h-10 w-10 rounded-full" /> */}
 
           <figcaption className="space-y-1 text-base font-medium">
-            <div className="mb-2 leading-none text-dark dark:text-white">
-              {session?.user?.name}
-            </div>
 
-            <div className="leading-none text-gray-6">{session?.user?.email}</div>
+            <div className="leading-none text-gray-6">{email}</div>
           </figcaption>
         </figure>
 
@@ -84,7 +85,7 @@ export function UserInfo() {
 
         <DropdownMenuItem
           className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer"
-          onClick={onSignOut}
+          onClick={signout}
         >
           <LogOutIcon />
           Log out

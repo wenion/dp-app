@@ -1,37 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useMemo } from "react";
+
 import { useAppContext } from "../context";
 import { Navigation } from "./navigation";
 import { Notification } from "./notification";
-// import { ThemeToggleSwitch } from "./theme-toggle";
 import { UserInfo } from "./user-info";
-import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
 
 export function Header() {
-  const { status } = useSession();
-  const { isMobile } = useAppContext();
-  const pathname = usePathname();
+  const { session } = useAppContext();
 
-  const loginPath = "/login";
+  const userName = useMemo(() => {
+    if (session?.user?.email) {
+      const username = session?.user?.email.split("@")[0];
+      const first = username.split(/[._\s-]+/)[0];
+      return first.charAt(0).toUpperCase() + first.slice(1);
+    }
+  }, [session]);
 
   return (
-    <header className="sticky top-0 z-30 cursor-pointer flex items-center justify-between border-b border-stroke bg-white px-4 py-5 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10">
-      {isMobile && (
-        <Link href={"/"}>
-          <Image
-            src={"/trace_logo.svg"}
-            width={32}
-            height={32}
-            alt=""
-            role="presentation"
-          />
-        </Link>
-      )}
-
+    <header className="sticky top-0 z-30 flex w-full cursor-pointer items-center justify-end border-b border-stroke bg-white px-4 py-5 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10">
       <div className="max-[850px]:hidden">
         <Image
           className="dark:invert"
@@ -43,26 +32,12 @@ export function Header() {
         />
       </div>
 
-      <div className="flex flex-1 items-center pl-12 min-[375px]:pl-8 gap-2 min-[375px]:gap-4">
-        {status === "authenticated" ? (
-          <>
-            <Navigation />
-            <div className="flex flex-1 space-x-4 justify-end">
-              <Notification />
-              <UserInfo />
-            </div>
-          </>
-        ): (
-          <div className="flex flex-1 space-x-4 justify-end">
-            {pathname !== loginPath && (
-              <div className="flex flex-wrap items-center gap-2 md:flex-row">
-                <Button asChild>
-                  <Link href={loginPath}>Sign In</Link>
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+      <div className="flex flex-1 pl-12">
+        <Navigation />
+      </div>
+      <div className="flex flex-none gap-4">
+        <Notification />
+        <UserInfo name={userName} email={session?.user?.email} />
       </div>
     </header>
   );
