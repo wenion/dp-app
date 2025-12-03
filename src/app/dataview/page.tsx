@@ -12,18 +12,28 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+  Menubar,
+  MenubarCheckboxItem,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  ChevronsLeftRight as ExpandIcon,
-  ChevronsRightLeft as CollapseIcon
+  RotateCcw as RefreshIcon,
 } from 'lucide-react';
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -190,66 +200,66 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     []
   );
 
+  const fetchData = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+
+    // calculate range from page & size (this is your "request with page")
+    const from = pageIndex * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+      .from("Trace")
+      .select("*", { count: "exact" }) // count: exact -> returns total
+      .range(from, to);
+
+    // Apply sorting (only the first sort rule, others ignored for simplicity)
+    const firstSort = sorting[0];
+    if (firstSort && firstSort.id && firstSort.id !== "select") {
+      const column = firstSort.id as keyof Trace;
+      query = query.order(column as string, {
+        ascending: !firstSort.desc,
+      });
+    } else {
+      // default ordering if no sorting set
+      query = query.order("created_at", { ascending: false });
+    }
+
+    // Apply global search via OR across a few useful text columns
+    if (globalFilter.trim() !== "") {
+      const search = globalFilter.trim();
+      query = query.or(
+        [
+          `event_type.ilike.%${search}%`,
+          `url.ilike.%${search}%`,
+          `page_type.ilike.%${search}%`,
+          `author.ilike.%${search}%`,
+          `message.ilike.%${search}%`,
+          `tag_name.ilike.%${search}%`,
+          `element_text.ilike.%${search}%`,
+          `x_path.ilike.%${search}%`,
+          `container_id.ilike.%${search}%`,
+          `event_state.ilike.%${search}%`,
+          `event_id.ilike.%${search}%`,
+        ].join(",")
+      );
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error("Error loading traces:", error);
+      setErrorMsg(error.message);
+    } else {
+      setData((data as Trace[]) ?? []);
+      setTotalRows(count ?? 0);
+    }
+
+    setIsLoading(false);
+  };
+
   // ---- Fetch data from Supabase whenever page, size, sorting, or filter changes ----
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setErrorMsg(null);
-
-      // calculate range from page & size (this is your "request with page")
-      const from = pageIndex * pageSize;
-      const to = from + pageSize - 1;
-
-      let query = supabase
-        .from("Trace")
-        .select("*", { count: "exact" }) // count: exact -> returns total
-        .range(from, to);
-
-      // Apply sorting (only the first sort rule, others ignored for simplicity)
-      const firstSort = sorting[0];
-      if (firstSort && firstSort.id && firstSort.id !== "select") {
-        const column = firstSort.id as keyof Trace;
-        query = query.order(column as string, {
-          ascending: !firstSort.desc,
-        });
-      } else {
-        // default ordering if no sorting set
-        query = query.order("created_at", { ascending: false });
-      }
-
-      // Apply global search via OR across a few useful text columns
-      if (globalFilter.trim() !== "") {
-        const search = globalFilter.trim();
-        query = query.or(
-          [
-            `event_type.ilike.%${search}%`,
-            `url.ilike.%${search}%`,
-            `page_type.ilike.%${search}%`,
-            `author.ilike.%${search}%`,
-            `message.ilike.%${search}%`,
-            `tag_name.ilike.%${search}%`,
-            `element_text.ilike.%${search}%`,
-            `x_path.ilike.%${search}%`,
-            `container_id.ilike.%${search}%`,
-            `event_state.ilike.%${search}%`,
-            `event_id.ilike.%${search}%`,
-          ].join(",")
-        );
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        console.error("Error loading traces:", error);
-        setErrorMsg(error.message);
-      } else {
-        setData((data as Trace[]) ?? []);
-        setTotalRows(count ?? 0);
-      }
-
-      setIsLoading(false);
-    };
-
     fetchData();
   }, [supabase, pageIndex, pageSize, sorting, globalFilter]);
 
@@ -291,50 +301,54 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   return (
     <div className="space-y-4">
       {/* Top controls */}
-      <div className="flex flex-col space-y-2">
-        {/* Global search */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Search</label>
-          <input
-            className="border rounded px-2 py-1 text-sm"
-            placeholder="Search event_type, URL, message…"
-            value={globalFilter ?? ""}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-          />
-        </div>
-
-        {/* Column visibility toggles */}
-        <div className="flex items-center gap-2">
-          <label className="flex text-sm font-medium">Columns</label>
-          <Collapsible
-            open={isOpen}
-            onOpenChange={setIsOpen}
-          >
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" size="icon" className="size-8 cursor-pointer">
-                {isOpen? <CollapseIcon /> : <ExpandIcon />}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="flex flex-wrap gap-2 mt-2">
+      <div className="flex items-center justify-between">
+        <Menubar>
+          <MenubarMenu>
+            <MenubarTrigger>Columns</MenubarTrigger>
+            <MenubarContent>
               {table.getAllLeafColumns().map((column) => {
                 if (column.id === "select") return null;
                 return (
-                  <label
+                  <MenubarItem
                     key={column.id}
-                    className="flex items-center gap-1 text-xs border rounded px-2 py-1 whitespace-nowrap"
+                    className="flex w-full items-center whitespace-nowrap px-2"
                   >
-                    <input
+                    <Input
                       type="checkbox"
                       checked={column.getIsVisible()}
                       onChange={column.getToggleVisibilityHandler()}
+                      className="h-fit w-fit cursor-pointer"
                     />
-                    {column.columnDef.header as string}
-                  </label>
+                    <span>{column.columnDef.header as string}</span>
+                  </MenubarItem>
                 );
               })}
-            </CollapsibleContent>
-          </Collapsible>
+            </MenubarContent>
+          </MenubarMenu>
+        </Menubar>
+
+        <div className="flex items-center gap-2" >
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Search</label>
+            <input
+              className="border rounded px-2 py-1 text-sm"
+              placeholder="Search event_type, URL, message…"
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+            />
+          </div>
+
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Refresh"
+            className="cursor-pointer"
+            onClick={fetchData}
+          >
+            <RefreshIcon />
+          </Button>
         </div>
+
       </div>
 
       {/* Status / error */}
