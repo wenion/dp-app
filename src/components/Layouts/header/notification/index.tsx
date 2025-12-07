@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Bell as BellIcon } from "lucide-react";

@@ -106,9 +106,14 @@ export function ContextProvider({
             s
           );
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!mounted) return;
-        setError(e?.message ?? "Failed to get session");
+
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Failed to get session");
+        }
       } finally {
         if (mounted) setLoading(false);
       }
