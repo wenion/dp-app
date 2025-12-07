@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
     LogOut as LogOutIcon,
     SettingsIcon,
@@ -36,7 +37,15 @@ export function UserInfo({
       <DropdownMenuTrigger asChild>
         <figure className="flex items-center content-center gap-3">
           {image && (
-            <img src={image} alt="User Avatar" className="h-10 w-10 rounded-full" />
+            <div className="relative h-10 w-10">
+              <Image
+                src={image}
+                alt="User Avatar"
+                fill
+                className="rounded-full object-cover"
+                sizes="40px"
+              />
+            </div>
           )}
           <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
             <span>{name}</span>
