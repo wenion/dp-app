@@ -1,7 +1,7 @@
 "use client"
 
 // TraceTableSupabase.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -13,17 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
-  MenubarCheckboxItem,
   MenubarContent,
   MenubarItem,
   MenubarMenu,
-  MenubarRadioGroup,
-  MenubarRadioItem,
-  MenubarSeparator,
-  MenubarShortcut,
-  MenubarSub,
-  MenubarSubContent,
-  MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar";
 import { Input } from "@/components/ui/input";
@@ -78,7 +70,6 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   const [data, setData] = useState<Trace[]>([]);
   const [totalRows, setTotalRows] = useState(0);
 
-  const [isOpen, setIsOpen] = useState(false)
   const defaultLenght = 10;
 
   const [sorting, setSorting] = useState<SortingState>([
@@ -200,7 +191,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     []
   );
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setErrorMsg(null);
 
@@ -256,12 +247,18 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     }
 
     setIsLoading(false);
-  };
+  }, [
+    supabase,
+    pageIndex,
+    pageSize,
+    globalFilter,
+    sorting,
+  ]);
 
   // ---- Fetch data from Supabase whenever page, size, sorting, or filter changes ----
   useEffect(() => {
     fetchData();
-  }, [supabase, pageIndex, pageSize, sorting, globalFilter]);
+  }, [fetchData]);
 
   const pageCount =
     pageSize > 0 ? Math.ceil((totalRows || 0) / pageSize) : 0;
