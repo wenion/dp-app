@@ -6,6 +6,7 @@ import {
     LogOut as LogOutIcon,
     SettingsIcon,
     User as UserIcon,
+    Database as DatabaseIcon,
     ChevronUp as ChevronUpIcon,
 } from "lucide-react";
 
@@ -83,6 +84,12 @@ export function UserInfo({
           <DropdownMenuItem className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
             <UserIcon />
             View profile
+          </DropdownMenuItem>
+          <DropdownMenuItem className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
+            <a href="/data" className="flex items-center gap-3 w-full">
+              <DatabaseIcon />
+              View data
+            </a>
           </DropdownMenuItem>
           <DropdownMenuItem className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
             <SettingsIcon />
