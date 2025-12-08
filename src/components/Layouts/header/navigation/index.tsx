@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
+import { useState } from "react";
+import Link from "next/link";
 
 import {
   NavigationMenu,
@@ -9,23 +9,42 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
+} from "@/components/ui/navigation-menu";
+
+
+const TABS = [
+  { id: "about", label: "About" },
+  { id: "work", label: "Work Packages" },
+  { id: "team", label: "Team" },
+  { id: "download", label: "Download" },
+];
 
 export function Navigation() {
+  const [activeTab, setActiveTab] = useState<string>("about");
+
   return (
     <NavigationMenu viewport={false}>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link href="/">Home</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link href="/dataview">DataView</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
+      <NavigationMenuList className="gap-2">
+        {TABS.map((tab) => {
+          const isActive = tab.id === activeTab;
+          return (
+            <NavigationMenuItem key={tab.id}>
+              <NavigationMenuLink
+                asChild
+                onClick={() => setActiveTab(tab.id)}
+                className={[
+                  navigationMenuTriggerStyle(),
+                  isActive
+                    ? "bg-sky-100 text-sky-800 border-b-2 border-sky-600"
+                    : "text-gray-500 hover:text-slate-800 hover:bg-gray-100",
+                ].join(" ")}
+              >
+                <Link href={`/${tab.id}`}>{tab.label}</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          );
+        })}
       </NavigationMenuList>
     </NavigationMenu>
-  )
+  );
 }

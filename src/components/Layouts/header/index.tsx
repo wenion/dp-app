@@ -42,7 +42,7 @@ export function Header() {
               hovered ? "-translate-y-6" : "translate-y-0"
             }`}
           >
-            Evidence-Centred Assessment for Writing with {" "}
+            Assessment for Writing with {" "}
             <span className="bg-gradient-to-r from-sky-400 via-violet-400 to-amber-400 bg-clip-text text-transparent">
               Generative AI
             </span>
