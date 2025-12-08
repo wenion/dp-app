@@ -13,7 +13,7 @@ import {
 
 
 const TABS = [
-  { id: "about", label: "About" },
+  { id: "", label: "About" },
   { id: "work", label: "Work Packages" },
   { id: "team", label: "Team" },
   { id: "download", label: "Download" },
