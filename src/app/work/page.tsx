@@ -113,7 +113,7 @@ export default function Home() {
       </div>
 
       <footer className="flex gap-6 pt-8 pb-4 flex-wrap items-center justify-center text-sm text-gray-500 h-20">
-        ARC Discovery Project (DP24) · Monash University · Centre for Learning Analytics at Monash (CoLAM)
+        ARC Discovery Project (DP24) · Monash University
       </footer>
     </>
   );
