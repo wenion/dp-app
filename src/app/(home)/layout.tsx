@@ -2,7 +2,7 @@
 import { Header } from "@/components/Layouts/header";
 import NextTopLoader from "nextjs-toploader";
 
-export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function HomeLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <NextTopLoader color="#5750F1" showSpinner={false} />
