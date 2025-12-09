@@ -6,7 +6,7 @@ export default function Home() {
       <div className="bg-white flex flex-col flex-1 w-full transition-all duration-300 hover:border-sky-500/50 focus-within:border-sky-500/50">
         <main className="flex py-6 px-16 text-base pt-10">
           <section className="space-y-6">
-            <h2 className="text-xl font-semibold text-sky-700">Work Packages 🛠️</h2>
+            <h2 className="text-xl font-semibold text-sky-700">Work Packages</h2>
             <p className="text-sm text-gray-600">
               Four tightly integrated work packages structure the project from
               co-design, through experimentation, to deployment at classroom scale.
