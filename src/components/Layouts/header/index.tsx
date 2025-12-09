@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { useAppContext } from "../context";
 import { Navigation } from "./navigation";
 import { Notification } from "./notification";
@@ -9,6 +11,8 @@ import { UserInfo } from "./user-info";
 
 export function Header() {
   const { session } = useAppContext();
+  const router = useRouter();
+
   const [hovered, setHovered] = useState(false);
 
   const userName = useMemo(() => {
@@ -58,8 +62,21 @@ export function Header() {
       </div>
 
       <div className="flex gap-4">
-        <Notification />
-        <UserInfo name={userName} email={session?.user?.email} />
+        { userName ? (
+          <>
+            <Notification />
+            <UserInfo name={userName} email={session?.user?.email} />
+          </>
+        ) : (
+          <Button
+            variant="outline"
+            aria-label="Login"
+            className="cursor-pointer"
+            onClick={() => router.push("/login")}
+          >
+            Login
+          </Button>
+        )}
       </div>
     </header>
   );
