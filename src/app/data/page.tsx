@@ -301,7 +301,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       <div className="flex items-center justify-between">
         <Menubar>
           <MenubarMenu>
-            <MenubarTrigger>Columns</MenubarTrigger>
+            <MenubarTrigger className=" cursor-pointer">Columns</MenubarTrigger>
             <MenubarContent>
               {table.getAllLeafColumns().map((column) => {
                 if (column.id === "select") return null;
@@ -470,7 +470,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         <div className="flex items-center gap-2">
           <span>Rows per page:</span>
           <select
-            className="border rounded px-1 py-0.5"
+            className="border rounded px-1 py-0.5 cursor-pointer"
             value={pageSize}
             onChange={(e) => {
               const newSize = Number(e.target.value);
@@ -488,14 +488,14 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 
         <div className="flex items-center gap-2">
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50"
+            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
             onClick={() => setPageIndex(0)}
             disabled={pageIndex === 0}
           >
             ⏮ First
           </button>
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50"
+            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
             onClick={() => setPageIndex((p) => Math.max(p - 1, 0))}
             disabled={pageIndex === 0}
           >
@@ -508,7 +508,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
             </strong>
           </span>
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50"
+            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
             onClick={() =>
               setPageIndex((p) => (pageCount ? Math.min(p + 1, pageCount - 1) : p + 1))
             }
@@ -517,7 +517,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
             Next ▶
           </button>
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50"
+            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
             onClick={() => pageCount && setPageIndex(pageCount - 1)}
             disabled={pageCount === 0 || pageIndex >= pageCount - 1}
           >
