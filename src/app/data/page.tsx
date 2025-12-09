@@ -296,7 +296,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   const selectedCount = Object.keys(rowSelection).length;
 
   return (
-    <div className="space-y-4">
+    <div className="bg-white flex flex-col flex-1 w-full space-y-4 p-4">
       {/* Top controls */}
       <div className="flex items-center justify-between">
         <Menubar>
@@ -357,7 +357,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       )}
 
       {/* Table */}
-      <div className="border rounded-md overflow-auto max-h-[600px]">
+      <div className="border rounded-md overflow-auto [height:800px]:max-h-[700px]">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -532,7 +532,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 export default function TracePage() {
   const supabase = createClient();
   return (
-    <div className="p-4">
+    <div className="mt-auto mb-auto">
       <TraceTableSupabase supabase={supabase} />
     </div>
   );

@@ -2,12 +2,14 @@
 import { Header } from "@/components/Layouts/header";
 import NextTopLoader from "nextjs-toploader";
 
-export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function DataLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <NextTopLoader color="#5750F1" showSpinner={false} />
       <Header />
-      {children}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {children}
+      </div>
     </div>
   );
 }
