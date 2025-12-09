@@ -2,9 +2,9 @@
 
 export default function Home() {
   return (
-    <div className="font-sans flex flex-col items-center bg-gray-100 text-slate-900 h-screen">
-      <div className="bg-white flex flex-col w-full max-w-7xl transition-all duration-300 hover:border-sky-500/50 focus-within:border-sky-500/50">
-        <main className="flex py-6 px-16 text-base pt-20 pb-40">
+    <>
+      <div className="bg-white flex flex-col flex-1 w-full transition-all duration-300 hover:border-sky-500/50 focus-within:border-sky-500/50">
+        <main className="flex py-6 px-16 text-base pt-10">
           <section className="space-y-6">
             <h2 className="text-xl font-semibold text-sky-700">Work Packages 🛠️</h2>
             <p className="text-sm text-gray-600">
@@ -112,9 +112,9 @@ export default function Home() {
         </main>
       </div>
 
-      <footer className="flex gap-6 pt-8 pb-4 flex-wrap items-center justify-center text-sm text-gray-500">
-        All rights reserved @2025 · Monash University ARC Discovery Project
+      <footer className="flex gap-6 pt-8 pb-4 flex-wrap items-center justify-center text-sm text-gray-500 h-20">
+        ARC Discovery Project (DP24) · Monash University · Centre for Learning Analytics at Monash (CoLAM)
       </footer>
-    </div>
+    </>
   );
 }
