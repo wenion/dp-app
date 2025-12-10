@@ -12,15 +12,6 @@ export default function Home() {
               <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
                 <div className="flex items-start gap-5">
                   {/* Portrait */}
-                  <img
-                    loading="lazy"
-                    src="https://scholar.googleusercontent.com/citations?view_op=view_photo&user=HSdHD5UAAAAJ&citpid=4"
-                    className="w-20 h-20 rounded-xl object-cover ring-1 ring-gray-200 shrink-0"
-                    alt="Zachari Swiecki"
-                    onError={(e) => {
-                      e.currentTarget.src = "/assets/no-portrait.png";
-                    }}
-                  />
 
                   {/* Text */}
                   <div className="flex-1">
@@ -46,15 +37,6 @@ export default function Home() {
               <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
                 <div className="flex items-start gap-5">
                   {/* Portrait */}
-                  <img
-                    loading="lazy"
-                    src="https://scholar.googleusercontent.com/citations?view_op=view_photo&user=Q4Nm22sAAAAJ&citpid=3"
-                    className="w-20 h-20 rounded-xl object-cover ring-1 ring-gray-200 shrink-0"
-                    alt="Zachari Swiecki"
-                    onError={(e) => {
-                      e.currentTarget.src = "/assets/no-portrait.png";
-                    }}
-                  />
 
                   {/* Text */}
                   <div className="flex-1">
@@ -67,12 +49,12 @@ export default function Home() {
                     </p>
 
                     <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
-                      My research in learning analytics harnesses large-scale data from
+                      {`My research in learning analytics harnesses large-scale data from
                       learners' interactions with digital technologies to advance
                       understanding of learning. I develop data science, AI, and design
                       methods, as well as unobtrusive data collection techniques, to model
                       self-regulated and collaborative learning as dynamic, fine-grained
-                      processes.
+                      processes.`}
                     </p>
                   </div>
                 </div>
@@ -81,15 +63,6 @@ export default function Home() {
               <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
                 <div className="flex items-start gap-5">
                   {/* Portrait */}
-                  <img
-                    loading="lazy"
-                    src="https://scholar.googleusercontent.com/citations?view_op=view_photo&user=AfzuNksAAAAJ&citpid=2"
-                    className="w-20 h-20 rounded-xl object-cover ring-1 ring-gray-200 shrink-0"
-                    alt="Zachari Swiecki"
-                    onError={(e) => {
-                      e.currentTarget.src = "/assets/no-portrait.png";
-                    }}
-                  />
 
                   {/* Text */}
                   <div className="flex-1">
@@ -102,12 +75,12 @@ export default function Home() {
                     </p>
 
                     <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
-                      I am an educational researcher with great passion to understand how
+                      {`I am an educational researcher with great passion to understand how
                       people construct meanings in their interactions with the world, and
                       to enhance human learning using rigorous and creative research methods.
                       My research interests range from learning analytics, feedback practice,
                       and digital storytelling to reading cultures, children's literature,
-                      and multimodal texts.
+                      and multimodal texts.`}
                     </p>
                   </div>
                 </div>
@@ -116,15 +89,6 @@ export default function Home() {
               <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
                 <div className="flex items-start gap-5">
                   {/* Portrait */}
-                  <img
-                    loading="lazy"
-                    src="https://scholar.googleusercontent.com/citations?view_op=view_photo&user=ysx8wHgAAAAJ&citpid=5"
-                    className="w-20 h-20 rounded-xl object-cover ring-1 ring-gray-200 shrink-0"
-                    alt="Zachari Swiecki"
-                    onError={(e) => {
-                      e.currentTarget.src = "/assets/no-portrait.png";
-                    }}
-                  />
 
                   {/* Text */}
                   <div className="flex-1">
@@ -150,15 +114,6 @@ export default function Home() {
               <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
                 <div className="flex items-start gap-5">
                   {/* Portrait */}
-                  <img
-                    loading="lazy"
-                    src="https://scholar.googleusercontent.com/citations?view_op=view_photo&user=elflddwAAAAJ&citpid=2"
-                    className="w-20 h-20 rounded-xl object-cover ring-1 ring-gray-200 shrink-0"
-                    alt="Zachari Swiecki"
-                    onError={(e) => {
-                      e.currentTarget.src = "/assets/no-portrait.png";
-                    }}
-                  />
 
                   {/* Text */}
                   <div className="flex-1">
