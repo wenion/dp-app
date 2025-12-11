@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
     LogOut as LogOutIcon,
     SettingsIcon,
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { cn } from "@/lib/utils";
-import { signout } from "@/utils/supabase/action";
+import { useAppContext } from "../../context";
 
 export function UserInfo({
   image,
@@ -31,7 +32,14 @@ export function UserInfo({
   name?: string;
   email?: string;
 }) {
+  const { signOut } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    router.push("/login");
+  };
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -101,7 +109,7 @@ export function UserInfo({
 
         <DropdownMenuItem
           className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer"
-          onClick={signout}
+          onClick={handleLogout}
         >
           <LogOutIcon />
           Log out
