@@ -16,11 +16,15 @@ export function Header() {
   const [hovered, setHovered] = useState(false);
 
   const userName = useMemo(() => {
-    if (session?.user?.email) {
-      const username = session?.user?.email.split("@")[0];
-      const first = username.split(/[._\s-]+/)[0];
-      return first.charAt(0).toUpperCase() + first.slice(1);
-    }
+    return session?.user?.identities?.[0]?.identity_data?.name || null;
+  }, [session]);
+
+  const email = useMemo(() => {
+    return session?.user?.identities?.[0]?.identity_data?.email || null;
+  }, [session]);
+
+  const avatarUrl = useMemo(() => {
+    return session?.user?.identities?.[0]?.identity_data?.avatar_url || null;
   }, [session]);
 
   return (
@@ -65,7 +69,11 @@ export function Header() {
         { userName ? (
           <>
             <Notification />
-            <UserInfo name={userName} email={session?.user?.email} />
+            <UserInfo
+              name={userName}
+              email={email}
+              image={avatarUrl}
+            />
           </>
         ) : (
           <Button
