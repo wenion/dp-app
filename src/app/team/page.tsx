@@ -1,6 +1,40 @@
 "use client";
 
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+
+import { createClient } from "@/utils/supabase/client";
+
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  image?: string;
+};
+
 export default function Home() {
+  const [data, setData] = useState<TeamMember[]>([]);
+  const supabase = createClient();
+
+  const fetchData = useCallback(
+    async () => {
+      let query = supabase
+        .from("TeamMember")
+        .select()
+        .order("order_index", { ascending: true })
+        .limit(6);
+
+      const { data: rows } = await query;
+      setData((rows as TeamMember[]) ?? []);
+    }
+    , []
+  );
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   return (
     <>
       <div className="bg-white flex flex-col flex-1 w-full transition-all duration-300 hover:border-sky-500/50 focus-within:border-sky-500/50">
@@ -9,131 +43,39 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-sky-700">Project Team</h2>
 
             <div className="grid gap-4 md:grid-cols-3 text-sm">
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
-                <div className="flex items-start gap-5">
-                  {/* Portrait */}
+              {data.map((member) => (
+                <div key={member.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
+                  <div className="flex items-start gap-5">
 
-                  {/* Text */}
-                  <div className="flex-1">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400 mb-1">
-                      Project Lead
-                    </p>
+                    {/* Portrait */}
+                    <div className="relative h-16 w-16 flex-shrink-0">
+                      {member.image && (
+                        <Image
+                          src={member.image ?? ""}
+                          alt={member.name}
+                          fill
+                          className="rounded-full object-cover shadow-sm border border-gray-200"
+                        />
+                      )}
+                    </div>
 
-                    <p className="text-lg font-bold text-sky-800 leading-tight">
-                      Dr Zachari Swiecki
-                    </p>
+                    {/* Text */}
+                    <div className="flex-1">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400 mb-1">
+                        {member.role}
+                      </p>
 
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
-                      My work focuses on advancing our understanding of collaborative
-                      processes using computational methods including network analyses and
-                      simulations. Contexts include human/human collaboration and human/AI
-                      collaboration, particularly those contexts where learning is
-                      theorised to happen.
-                    </p>
+                      <p className="text-lg font-bold text-sky-800 leading-tight">
+                        {member.name}
+                      </p>
+
+                      <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
+                        {member.bio}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
-                <div className="flex items-start gap-5">
-                  {/* Portrait */}
-
-                  {/* Text */}
-                  <div className="flex-1">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400 mb-1">
-                      Chief Investigator
-                    </p>
-
-                    <p className="text-lg font-bold text-sky-800 leading-tight">
-                      Prof Dragan Gasevic
-                    </p>
-
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
-                      {`My research in learning analytics harnesses large-scale data from
-                      learners' interactions with digital technologies to advance
-                      understanding of learning. I develop data science, AI, and design
-                      methods, as well as unobtrusive data collection techniques, to model
-                      self-regulated and collaborative learning as dynamic, fine-grained
-                      processes.`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
-                <div className="flex items-start gap-5">
-                  {/* Portrait */}
-
-                  {/* Text */}
-                  <div className="flex-1">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400 mb-1">
-                      Chief Investigator
-                    </p>
-
-                    <p className="text-lg font-bold text-sky-800 leading-tight">
-                      Dr Yi-Shan Tsai
-                    </p>
-
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
-                      {`I am an educational researcher with great passion to understand how
-                      people construct meanings in their interactions with the world, and
-                      to enhance human learning using rigorous and creative research methods.
-                      My research interests range from learning analytics, feedback practice,
-                      and digital storytelling to reading cultures, children's literature,
-                      and multimodal texts.`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
-                <div className="flex items-start gap-5">
-                  {/* Portrait */}
-
-                  {/* Text */}
-                  <div className="flex-1">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400 mb-1">
-                      Chief Investigator
-                    </p>
-
-                    <p className="text-lg font-bold text-sky-800 leading-tight">
-                      Dr Jia (Jackie) Rong
-                    </p>
-
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
-                      My research spans machine learning, deep learning, bio-signal and image
-                      processing, with applications in digital health, medical imaging, cancer
-                      diagnosis, and cardiac disease detection, and she serves on the editorial
-                      board of Scientific Reports and program committees for top-tier AI
-                      conferences including AAAI, IJCAI, and PRICAI.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-[1px]">
-                <div className="flex items-start gap-5">
-                  {/* Portrait */}
-
-                  {/* Text */}
-                  <div className="flex-1">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400 mb-1">
-                      Chief Investigator
-                    </p>
-
-                    <p className="text-lg font-bold text-sky-800 leading-tight">
-                      Dr Mladen Raković
-                    </p>
-
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600 max-w-prose">
-                      I use learning analytics and artificial intelligence to study how
-                      students self-regulate learning in complex reading and writing
-                      tasks, and to design technology-enhanced environments that deliver
-                      automated, personalised support.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </section>
         </main>
