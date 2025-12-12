@@ -26,9 +26,9 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.544.0",
-    "next": "^16.0.8",
+    "next": "^16.0.10",
     "nextjs-toploader": "^3.9.17",
-    "react": "^19.2.1",
+    "react": "^19.2.3",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.3.1"
   },
