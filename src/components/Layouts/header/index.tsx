@@ -29,7 +29,6 @@ export function Header() {
 
   return (
     <header
-      // className="fixed top-0 z-30 flex justify-between w-full cursor-pointer items-center border-b border-stroke bg-white px-4 py-2 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10"
       className="sticky top-0 z-30 flex w-full cursor-pointer items-center justify-between border-b border-stroke bg-white px-4 py-2 shadow-1 dark:border-stroke-dark dark:bg-gray-dark md:px-5 2xl:px-10"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -68,7 +67,7 @@ export function Header() {
       <div className="flex gap-4">
         { userName ? (
           <>
-            <Notification />
+            {/* <Notification /> */}
             <UserInfo
               name={userName}
               email={email}

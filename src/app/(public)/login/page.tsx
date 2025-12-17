@@ -1,40 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 import GoogleSigninButton from "@/components/Auth/GoogleSigninButton";
 import SigninWithPassword from "@/components/Auth/SigninWithPassword";
 import { useAppContext } from "@/components/Layouts/context";
 
 export default function LoginPage() {
-  const { session /* , status */ } = useAppContext();
+  const { session } = useAppContext();
+  const sp = useSearchParams();
   const router = useRouter();
 
-  // Redirect if already signed in
+  const from = sp.get("from");
+  const ext = sp.get("ext");
+
+  const next = from === "extension"
+    ? `/settings/integrations?from=extension&ext=${encodeURIComponent(ext ?? "")}`
+    : "/";
+
   useEffect(() => {
     if (session) {
-      router.push("/");
+      router.replace(next);
     }
-  }, [session, router]);
-
-  // Optional: avoid rendering form while redirecting
-  const isRedirecting = useMemo(() => !!session, [session]);
-  if (isRedirecting) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Redirecting…</p>
-      </div>
-    );
-  }
+  }, [router, session, next]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-[525px]">
         <p className="py-4 text-xl font-bold">Sign in</p>
 
-        <GoogleSigninButton text="Sign in" />
+        <GoogleSigninButton text="Sign in" next={next} />
 
         <div className="my-6 flex items-center justify-center">
           <div className="flex-1 border-t" />

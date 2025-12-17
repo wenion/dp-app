@@ -8,8 +8,8 @@ import {
   useState,
 } from "react";
 import { Session } from "@supabase/supabase-js";
+import type { Provider } from "@supabase/supabase-js";
 
-import { PopupToExtensionEvent } from "@/config/eventTypes";
 import { useMessenger } from "@/components/useMessenger";
 import { createClient } from "@/utils/supabase/client";
 
@@ -18,7 +18,13 @@ type ContextType = {
   session: Session | null;
   loading: boolean;
 
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signInWithGoogle: ({
+    provider,
+    next
+  } : {
+    provider: Provider;
+    next: string
+  }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
   refreshSession: () => Promise<void>;
 };
@@ -64,20 +70,11 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        console.log("Auth event:", _event, session);
         setSession(session);
-        if (_event === "SIGNED_IN") {
-          sendMessage(
-            PopupToExtensionEvent.USER_LOGIN,
-            { session }
-          );
-        }
-        else if (_event === "SIGNED_OUT") {
-          sendMessage(
-            PopupToExtensionEvent.USER_LOGOUT,
-            null
-          );
-        }
+        sendMessage(
+          _event,
+          { session }
+        );
       }
     );
 
@@ -88,17 +85,20 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Actions
-    const signInWithGoogle = async () => {
+  const signInWithGoogle = async ({
+    provider = "google",
+    next,
+  }: {
+    provider: Provider;
+    next: string;
+  }) => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider,
       options: {
-        redirectTo:
-          typeof window !== "undefined"
-            ? `${window.location.origin}/auth/callback`
-            : undefined,
+        redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
-    // Note: after redirect, onAuthStateChange will update user/session
+
     return { error: error ?? null };
   };
 
