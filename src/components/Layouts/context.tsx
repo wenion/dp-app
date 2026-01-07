@@ -10,7 +10,6 @@ import {
 import { Session } from "@supabase/supabase-js";
 import type { Provider } from "@supabase/supabase-js";
 
-import { useMessenger } from "@/components/useMessenger";
 import { createClient } from "@/utils/supabase/client";
 
 
@@ -45,8 +44,6 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { sendMessage } = useMessenger();
-
   useEffect(() => {
     let isMounted = true;
 
@@ -71,10 +68,6 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
-        sendMessage(
-          _event,
-          { session }
-        );
       }
     );
 
