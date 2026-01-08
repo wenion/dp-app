@@ -20,7 +20,7 @@ export default function Home() {
   const fetchData = useCallback(
     async () => {
       let query = supabase
-        .from("TeamMember")
+        .from("team_members")
         .select()
         .order("order_index", { ascending: true })
         .limit(6);
