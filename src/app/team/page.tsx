@@ -3,10 +3,8 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
-import { createClient } from "@/utils/supabase/client";
-
-export type TeamMember = {
-  id: string;
+export type Member = {
+  id: number;
   name: string;
   role: string;
   bio: string;
@@ -14,19 +12,13 @@ export type TeamMember = {
 };
 
 export default function Home() {
-  const [data, setData] = useState<TeamMember[]>([]);
-  const supabase = createClient();
+  const [data, setData] = useState<Member[]>([]);
 
   const fetchData = useCallback(
     async () => {
-      let query = supabase
-        .from("team_members")
-        .select()
-        .order("order_index", { ascending: true })
-        .limit(6);
-
-      const { data: rows } = await query;
-      setData((rows as TeamMember[]) ?? []);
+      const response = await fetch('/api/team')
+      const members = await response.json()
+      setData((members as Member[]) ?? []);
     }
     , []
   );
