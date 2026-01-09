@@ -1,6 +1,5 @@
 "use client"
 
-// TraceTableSupabase.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
@@ -20,27 +19,25 @@ import {
 } from "@/components/ui/menubar";
 import { Input } from "@/components/ui/input";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   RotateCcw as RefreshIcon,
+  ArrowUpDown as SortIcon,
+  ArrowUp as ArrowUpIcon,
+  ArrowDown as ArrowDownIcon,
+  Play as NextIcon,
+  FastForward as LastIcon,
+  Rewind as FirstIcon,
 } from 'lucide-react';
-
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@/utils/supabase/client";
 
 export type Trace = {
   id: number;
   created_at: string; // ISO string
   event_type: string | null;
-  user_id: string | null;
   url: string | null;
   page_type: string | null;
   author: string | null;
   message: string | null;
   cursor_position: number | null;
+  end_position: number | null;
   event_value: string | null;
   tag_name: string | null;
   element_text: string | null;
@@ -56,26 +53,22 @@ export type Trace = {
 };
 
 type TraceTableSupabaseProps = {
-  supabase: SupabaseClient;
   pageSizeOptions?: number[];
   defaultPageSize?: number;
 };
 
-
 export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
-  supabase,
   pageSizeOptions = [10, 20, 50, 100],
   defaultPageSize = 20,
 }) => {
   const [data, setData] = useState<Trace[]>([]);
   const [totalRows, setTotalRows] = useState(0);
 
-  const defaultLenght = 10;
-
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "id", desc: true },
+    { id: "created_at", desc: true },
   ]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [columnVisibility, setColumnVisibility] = useState<
     Record<string, boolean>
   >({});
@@ -86,6 +79,26 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const highlightText = (text: string, query: string) => {
+    if (!query) return text;
+
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escaped})`, "ig");
+
+    return text.split(regex).map((part, i) =>
+      regex.test(part) ? (
+        <mark
+          key={i}
+          className="bg-yellow-200 text-black rounded px-0.5"
+        >
+          {part}
+        </mark>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+  }
 
   // Define columns (same as before, but without client-side pagination)
   const columns = useMemo<ColumnDef<Trace>[]>(
@@ -120,8 +133,15 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
           return v ? new Date(v).toLocaleString() : "";
         },
       },
-      { accessorKey: "event_type", header: "Event Type" },
-      { accessorKey: "user_id", header: "User ID" },
+      {
+        accessorKey: "event_type",
+        header: "Event Type",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
       {
         accessorKey: "url",
         header: "URL",
@@ -134,121 +154,229 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
               target="_blank"
               rel="noreferrer"
               className="text-blue-600 underline"
+              title={v}
             >
-              {v}
+              {v.length > 30 ? v.slice(0, 30) + "…" : v}
             </a>
           );
         },
       },
-      { accessorKey: "page_type", header: "Page Type" },
-      { accessorKey: "author", header: "Author" },
+      {
+        accessorKey: "page_type",
+        header: "Page Type",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "author",
+        header: "Author",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
       {
         accessorKey: "message",
         header: "Message",
         cell: ({ getValue }) => {
           const v = getValue<string | null>() || "";
-          const truncated = v.length > 80 ? v.slice(0, 80) + "…" : v;
-          return <span title={v}>{truncated}</span>;
+
+          if (!v) {
+            return <span className="text-gray-300">NULL</span>;
+          }
+
+          const truncated =
+            v.length > 80 ? v.slice(0, 80) + "…" : v;
+
+          return (
+            <span title={v}>
+              {highlightText(truncated, searchInput)}
+            </span>
+          );
         },
       },
-      { accessorKey: "cursor_position", header: "Cursor Pos" },
-      { accessorKey: "event_value", header: "Event Value" },
-      { accessorKey: "tag_name", header: "Tag" },
+      {
+        accessorKey: "cursor_position",
+        header: "Cursor Pos",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "end_position",
+        header: "End Pos",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "event_value",
+        header: "Event Value",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "tag_name",
+        header: "Tag",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
       {
         accessorKey: "element_text",
         header: "Element Text",
         cell: ({ getValue }) => {
           const v = getValue<string | null>() || "";
-          const truncated = v.length > 60 ? v.slice(0, 60) + "…" : v;
-          return <span title={v}>{truncated}</span>;
+
+          if (!v) {
+            return <span className="text-gray-300">NULL</span>;
+          }
+
+          const truncated =
+            v.length > 60 ? v.slice(0, 60) + "…" : v;
+
+          return (
+            <span title={v}>
+              {highlightText(truncated, searchInput)}
+            </span>
+          );
         },
       },
-      { accessorKey: "offset_x", header: "Offset X" },
-      { accessorKey: "offset_y", header: "Offset Y" },
-      { accessorKey: "width", header: "Width" },
-      { accessorKey: "height", header: "Height" },
+      {
+        accessorKey: "offset_x",
+        header: "Offset X",
+        enableSorting: false,
+        cell: ({ getValue }) => {
+          const v = getValue<number>();
+          return v ? Math.round(v) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "offset_y",
+        header: "Offset Y",
+        enableSorting: false,
+        cell: ({ getValue }) => {
+          const v = getValue<number>();
+          return v ? Math.round(v) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "width",
+        header: "Width",
+        enableSorting: false,
+        cell: ({ getValue }) => {
+          const v = getValue<number>();
+          return v ? Math.round(v) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "height",
+        header: "Height",
+        enableSorting: false,
+        cell: ({ getValue }) => {
+          const v = getValue<number>();
+          return v ? Math.round(v) : <span className="text-gray-300">NULL</span>;
+        },
+      },
       {
         accessorKey: "x_path",
         header: "XPath",
         cell: ({ getValue }) => {
           const v = getValue<string | null>() || "";
+          if (!v) return <span className="text-gray-300">NULL</span>;
           const truncated = v.length > 80 ? v.slice(0, 80) + "…" : v;
           return <span title={v}>{truncated}</span>;
         },
       },
-      { accessorKey: "container_id", header: "Container ID" },
-      { accessorKey: "event_state", header: "Event State" },
-      { accessorKey: "event_id", header: "Event ID" },
+      {
+        accessorKey: "container_id",
+        header: "Container ID",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ? highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "event_state",
+        header: "Event State",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ? highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
+        accessorKey: "event_id",
+        header: "Event ID",
+        cell: ({ getValue }) => {
+          const v = getValue<string>();
+          return v ? highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
       {
         accessorKey: "event_time",
         header: "Event Time",
         cell: ({ getValue }) => {
           const v = getValue<string | null>();
-          return v ? new Date(v).toLocaleString() : "";
+          return v ? new Date(v).toLocaleString() : <span className="text-gray-300">NULL</span>;
         },
       },
     ],
-    []
+    [searchInput]
   );
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setErrorMsg(null);
 
-    // calculate range from page & size (this is your "request with page")
-    const from = pageIndex * pageSize;
-    const to = from + pageSize - 1;
-
-    let query = supabase
-      .from("Trace")
-      .select("*", { count: "exact" }) // count: exact -> returns total
-      .range(from, to);
-
-    // Apply sorting (only the first sort rule, others ignored for simplicity)
+    // Determine sorting parameters
     const firstSort = sorting[0];
-    if (firstSort && firstSort.id && firstSort.id !== "select") {
-      const column = firstSort.id as keyof Trace;
-      query = query.order(column as string, {
-        ascending: !firstSort.desc,
-      });
-    } else {
-      // default ordering if no sorting set
-      query = query.order("created_at", { ascending: false });
-    }
+    // if no sorting, firstSort == null default to created_at desc
+    const sortBy = (firstSort && firstSort.id !== "select") ? firstSort.id : "created_at";
+    const sortDesc = firstSort ? firstSort.desc : true;
 
-    // Apply global search via OR across a few useful text columns
-    if (globalFilter.trim() !== "") {
-      const search = globalFilter.trim();
-      query = query.or(
-        [
-          `event_type.ilike.%${search}%`,
-          `url.ilike.%${search}%`,
-          `page_type.ilike.%${search}%`,
-          `author.ilike.%${search}%`,
-          `message.ilike.%${search}%`,
-          `tag_name.ilike.%${search}%`,
-          `element_text.ilike.%${search}%`,
-          `x_path.ilike.%${search}%`,
-          `container_id.ilike.%${search}%`,
-          `event_state.ilike.%${search}%`,
-          `event_id.ilike.%${search}%`,
-        ].join(",")
-      );
-    }
+    // Build query parameters
+    const params = new URLSearchParams({
+      pageIndex: pageIndex.toString(),
+      pageSize: pageSize.toString(),
+      sortBy,
+      sortDesc: sortDesc.toString(),
+      globalFilter: globalFilter.trim(),
+    });
 
-    const { data, error, count } = await query;
+    try {
+      const response = await fetch(`/api/traces?${params.toString()}`);
 
-    if (error) {
-      console.error("Error loading traces:", error);
-      setErrorMsg(error.message);
-    } else {
-      setData((data as Trace[]) ?? []);
-      setTotalRows(count ?? 0);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setData(result.data ?? []);
+      setTotalRows(result.count ?? 0);
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : "Failed to load traces");
     }
 
     setIsLoading(false);
   }, [
-    supabase,
     pageIndex,
     pageSize,
     globalFilter,
@@ -275,6 +403,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     },
     onSortingChange: (updater) => {
       const next = typeof updater === "function" ? updater(sorting) : updater;
+      console.log("Sorting changed:", sorting, next);
       setSorting(next);
       setPageIndex(0); // reset to first page on sort change
     },
@@ -324,27 +453,36 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
           </MenubarMenu>
         </Menubar>
 
-        <div className="flex items-center gap-2" >
+        <form
+          className="flex items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault(); // prevent page reload
+            setGlobalFilter(searchInput);
+            fetchData();
+          }}
+        >
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Search</label>
-            <input
+            <Input
+              type="text"
               className="border rounded px-2 py-1 text-sm"
               placeholder="Search event_type, URL, message…"
-              value={globalFilter ?? ""}
-              onChange={(e) => setGlobalFilter(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              name="search"
             />
           </div>
 
           <Button
+            type="submit"
             variant="outline"
             size="icon"
-            aria-label="Refresh"
+            aria-label="Search / Refresh"
             className="cursor-pointer"
-            onClick={fetchData}
           >
             <RefreshIcon />
           </Button>
-        </div>
+        </form>
 
       </div>
 
@@ -368,33 +506,32 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
                   return (
                     <th
                       key={header.id}
-                      className="px-2 py-2 border-b border-x text-left font-semibold whitespace-nowrap"
+                      className="px-2 py-2 min-w-16 max-w-28 border-b border-x text-left font-semibold whitespace-nowrap"
                     >
                       {header.isPlaceholder ? null : (
-                        <button
-                          className={`flex items-center gap-1 ${
-                            canSort ? "cursor-pointer select-none" : ""
-                          }`}
-                          onClick={
-                            canSort
-                              ? header.column.getToggleSortingHandler()
-                              : undefined
-                          }
-                        >
+                        <div className="flex items-center gap-1 justify-between">
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
                           {canSort && (
-                            <span className="text-xs">
+                            <Button
+                              variant="outline"
+                              className="h-4 w-4 border-none cursor-pointer"
+                              onClick={
+                                canSort
+                                  ? header.column.getToggleSortingHandler()
+                                  : undefined
+                              }
+                            >
                               {sortDir === "asc"
-                                ? "▲"
+                                ? <ArrowUpIcon className="h-1 w-1 text-blue-500" />
                                 : sortDir === "desc"
-                                ? "▼"
-                                : ""}
-                            </span>
+                                ? <ArrowDownIcon className="h-1 w-1 text-blue-500" />
+                                : <SortIcon className="h-1 w-1 text-gray-200" />}
+                            </Button>
                           )}
-                        </button>
+                        </div>
                       )}
                     </th>
                   );
@@ -420,31 +557,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-2 py-1 border-b border-x align-top truncate">
-                    {(() => {
-                      const colId = cell.column.id;
-                      const raw = cell.getValue();
-
-                      // Only apply for these long-text columns
-                      if (["user_id", "x_path", "url"].includes(colId)) {
-                        const text = raw ? String(raw) : "";
-                        // const truncated = text.length > defaultLenght ? text.slice(0, defaultLenght) + "…" : text;
-                        if (text.length > defaultLenght) {
-                          return (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span>{text.slice(0, defaultLenght) + "…"}</span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{text}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )
-                        }
-                      }
-
-                      // Fallback to default cell rendering
-                      return flexRender(cell.column.columnDef.cell, cell.getContext());
-                    })()}
+                    { flexRender(cell.column.columnDef.cell, cell.getContext()) }
                   </td>
                 ))}
               </tr>
@@ -488,18 +601,18 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 
         <div className="flex items-center gap-2">
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
+            className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
             onClick={() => setPageIndex(0)}
             disabled={pageIndex === 0}
           >
-            ⏮ First
+            First <FirstIcon className="w-4 h-4" />
           </button>
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
+            className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
             onClick={() => setPageIndex((p) => Math.max(p - 1, 0))}
             disabled={pageIndex === 0}
           >
-            ◀ Prev
+            Prev <NextIcon className="rotate-180 w-4 h-4" />
           </button>
           <span>
             Page{" "}
@@ -508,20 +621,20 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
             </strong>
           </span>
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
+            className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
             onClick={() =>
               setPageIndex((p) => (pageCount ? Math.min(p + 1, pageCount - 1) : p + 1))
             }
             disabled={pageCount > 0 && pageIndex >= pageCount - 1}
           >
-            Next ▶
+            Next <NextIcon className="w-4 h-4" />
           </button>
           <button
-            className="border rounded px-2 py-1 disabled:opacity-50 cursor-pointer"
+            className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
             onClick={() => pageCount && setPageIndex(pageCount - 1)}
             disabled={pageCount === 0 || pageIndex >= pageCount - 1}
           >
-            Last ⏭
+            Last <LastIcon className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -530,10 +643,9 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 };
 
 export default function TracePage() {
-  const supabase = createClient();
   return (
     <div className="mt-auto mb-auto">
-      <TraceTableSupabase supabase={supabase} />
+      <TraceTableSupabase />
     </div>
   );
 }
