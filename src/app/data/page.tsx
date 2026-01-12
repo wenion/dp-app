@@ -81,7 +81,9 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const highlightText = (text: string, query: string) => {
-    if (!query) return text;
+    if (typeof text !== "string" || !query) {
+      return <span>{String(text ?? "")}</span>;
+    }
 
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`(${escaped})`, "ig");
@@ -403,7 +405,6 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     },
     onSortingChange: (updater) => {
       const next = typeof updater === "function" ? updater(sorting) : updater;
-      console.log("Sorting changed:", sorting, next);
       setSorting(next);
       setPageIndex(0); // reset to first page on sort change
     },
