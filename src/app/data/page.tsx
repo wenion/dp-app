@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { type DateRange } from "react-day-picker";
+import { startOfDay, endOfDay, format } from "date-fns";
 import {
   ColumnDef,
   flexRender,
@@ -10,6 +12,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Menubar,
   MenubarContent,
@@ -26,7 +29,10 @@ import {
   Play as NextIcon,
   FastForward as LastIcon,
   Rewind as FirstIcon,
+  ListTodo as ListIcon,
+  Download as ExportIcon,
 } from 'lucide-react';
+import { useAppContext } from "@/components/Layouts/context";
 
 export type Trace = {
   id: number;
@@ -79,6 +85,8 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const { session } = useAppContext();
 
   const highlightText = (text: string, query: string) => {
     if (typeof text !== "string" || !query) {
@@ -425,13 +433,128 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 
   const selectedCount = Object.keys(rowSelection).length;
 
+  /* -------------------- Export CSV -------------------- */
+  const downloadCSV = (rows: Trace[], filename: string) => {
+    if (!rows.length) return;
+
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.join(","),
+      ...rows.map(row =>
+        headers.map(h =>
+          JSON.stringify((row as any)[h] ?? "")
+        ).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const userName = useMemo(() => {
+    return session?.user?.identities?.[0]?.identity_data?.name + "_" || "";
+  }, [session]);
+
+  const exportCurrentPage = async () => {
+    downloadCSV(
+      data,
+      `${userName}traces_page_${pageIndex + 1}.csv`
+    );
+  };
+
+  const [showDateExport, setShowDateExport] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
+
+  const exportByDate = async () => {
+    if (!dateRange?.from || !dateRange?.to) {
+      alert("Please select a valid date range.");
+      return;
+    }
+    setShowDateExport(false);
+
+    const exportFrom = startOfDay(dateRange.from);
+    const exportTo = endOfDay(dateRange.to);
+
+    const params = new URLSearchParams({
+      from: exportFrom.toISOString(),
+      to: exportTo.toISOString(),
+      sortBy: sorting[0]?.id ?? "created_at",
+      sortDesc: String(sorting[0]?.desc ?? true),
+      globalFilter,
+    });
+
+    let result;
+    try {
+      const res = await fetch(
+        `/api/traces/export?${params.toString()}`,
+        {
+          headers: {
+            "x-timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+        }
+      );
+      result = await res.json();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to export data.");
+      return;
+    }
+
+    const fromLabel = format(exportFrom, "yyyy-MM-dd");
+    const toLabel = format(exportTo, "yyyy-MM-dd");
+
+    const filename = `${userName}traces_${fromLabel}_to_${toLabel}.csv`;
+    downloadCSV(result.data, filename);
+
+    // Reset date range
+    setDateRange(undefined);
+  };
+
+  const exportLast100Pages = async () => {
+    const maxRows = pageSize * 100;
+
+    const params = new URLSearchParams({
+      limit: maxRows.toString(),
+      sortBy: sorting[0]?.id ?? "created_at",
+      sortDesc: String(sorting[0]?.desc ?? true),
+      globalFilter,
+    });
+
+    let result;
+    try {
+      const res = await fetch(`/api/traces/export?${params.toString()}`);
+      result = await res.json();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to export data.");
+      return;
+    }
+
+    const filename = `${userName}traces_all.csv`;
+
+    downloadCSV(result.data, filename);
+  };
+
   return (
     <div className="bg-white flex flex-col flex-1 w-full space-y-4 p-4">
       {/* Top controls */}
       <div className="flex items-center justify-between">
         <Menubar>
           <MenubarMenu>
-            <MenubarTrigger className=" cursor-pointer">Columns</MenubarTrigger>
+            <MenubarTrigger className="cursor-pointer">
+              <ListIcon className="pr-2" />
+              Show Columns
+            </MenubarTrigger>
             <MenubarContent>
               {table.getAllLeafColumns().map((column) => {
                 if (column.id === "select") return null;
@@ -450,6 +573,62 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
                   </MenubarItem>
                 );
               })}
+            </MenubarContent>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger className="cursor-pointer">
+              <ExportIcon className="pr-2" />
+              Export Data
+            </MenubarTrigger>
+            <MenubarContent>
+              <MenubarItem onClick={exportCurrentPage}>
+                Export Current Page
+              </MenubarItem>
+              <MenubarItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setShowDateExport((v) => !v);
+                }}
+              >
+                Export By Date Range
+                {showDateExport && (
+                  <div className="fixed pt-24 pl-24 inset-0 bg-black/30 flex items-center justify-center z-50">
+                    <div className="bg-white p-4 rounded shadow space-y-3">
+                      <h3 className="font-semibold">Select Date Range</h3>
+
+                      <div className="space-y-1">
+                        <Calendar
+                          mode="range"
+                          defaultMonth={dateRange?.from}
+                          selected={dateRange}
+                          onSelect={setDateRange}
+                          numberOfMonths={2}
+                          className="rounded-lg border shadow-sm"
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowDateExport(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          Cancel
+                        </Button>
+                        <Button onClick={exportByDate} className="cursor-pointer">
+                          Confirm
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </MenubarItem>
+              <MenubarItem onClick={exportLast100Pages}>
+                Export All (max 100 pages)
+              </MenubarItem>
             </MenubarContent>
           </MenubarMenu>
         </Menubar>
