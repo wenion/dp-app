@@ -19,6 +19,7 @@ export async function GET(req: Request) {
 
   if (bearer) {
     try {
+      //TODO make it reusable
       const payload = jwt.verify(
         bearer,
         process.env.EXTENSION_JWT_SECRET!

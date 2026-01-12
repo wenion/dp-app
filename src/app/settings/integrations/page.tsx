@@ -18,23 +18,6 @@ function isChromiumWithRuntimeAPI(): boolean {
   return typeof window !== "undefined" && !!(window as any).chrome?.runtime?.sendMessage;
 }
 
-function sendMessageToExtension<T = any>(
-  extId: string,
-  message: any
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    try {
-      (window as any).chrome.runtime.sendMessage(extId, message, (resp: T) => {
-        const err = (window as any).chrome.runtime.lastError;
-        if (err) reject(new Error(err.message));
-        else resolve(resp);
-      });
-    } catch (e: any) {
-      reject(e);
-    }
-  });
-}
-
 export default function IntegrationsPage() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -71,41 +54,42 @@ export default function IntegrationsPage() {
 
     setState({ status: "connecting" });
 
+    // 1) mint a one-time code (server verifies user via Supabase cookie)
+    const r = await fetch("/api/extension/issue-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+
+    if (!r.ok) {
+      const data = await r.json().catch(() => null);
+      setState({
+        status: "error",
+        message: data?.error ?? "Issue-code failed",
+      });
+      return;
+    }
+
+    const { code } = (await r.json()) as { code: string };
+    if (!code) {
+      setState({
+        status: "error",
+        message: "Invalid response from issue-code API",
+      });
+      return;
+    }
+
     try {
-      // 1) mint a one-time code (server verifies user via Supabase cookie)
-      const r = await fetch("/api/extension/issue-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-      });
-      if (!r.ok) {
-        const text = await r.text();
-        throw new Error(`issue-code failed: ${text}`);
-      }
-      const { code } = (await r.json()) as { code: string };
-      if (!code) throw new Error("No code returned from /api/extension/issue-code");
-
-      // // 2) send code to extension; extension will call /api/extension/exchange itself
-      const resp = await sendMessageToExtension<{ ok?: boolean; error?: string }>(extId, {
-        type: "AUTH_CODE",
-        code,
-      });
-
-      if (!resp?.ok) {
-        throw new Error(resp?.error || "Extension did not confirm connection.");
-      }
-
+      (window as any).chrome.runtime.sendMessage(extId, { type: "AUTH_CODE", code });
       setState({ status: "connected", at: Date.now() });
-
-      setTimeout(() => {
-        router.replace("/");
-      }, 5000);
     } catch (e: any) {
       setState({
         status: "error",
-        message: e?.message || String(e),
+        message: e.message || String(e),
       });
     }
+
+    setTimeout(() => router.replace("/"), 5000);
   }
 
   return (
@@ -134,6 +118,7 @@ export default function IntegrationsPage() {
                     onClick={connectExtension}
                     disabled={state.status === "connecting" || state.status === "checking" || state.status === "connected"}
                     className="rounded-xl bg-sky-300 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 cursor-pointer"
+                    title="Click to connect the extension"
                   >
                     <RefreshIcon
                       className={state.status === "connecting" ? "h-8 w-8 animate-spin" : "h-8 w-8"}
@@ -151,10 +136,12 @@ export default function IntegrationsPage() {
                   {state.status === "connecting" && "Requesting a one-time code and sending it to the extension…"}
                   {state.status === "connected" && (
                     <div className="flex flex-col">
-                      <span className="text-green-500">Connected ✓ (at {new Date(state.at).toLocaleString()})</span>
-                      <span className="flex items-center justify-center mt-2 text-2xl animate-pulse">
+                      <span className="flex text-green-500">
+                        <b className="text-2xl">Successfully connected </b>
+                      </span>
+                      <span className="flex items-center justify-center mt-2 text-lg">
                         Redirecting
-                        <span className="ml-1 flex">
+                        <span className="text-2xl ml-1 flex">
                           <span className="animate-pulse">.</span>
                           <span className="animate-pulse delay-200">.</span>
                           <span className="animate-pulse delay-400">.</span>

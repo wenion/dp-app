@@ -17,18 +17,25 @@ export async function POST(req: Request) {
     .eq("code", code)
     .maybeSingle();
 
-  if (error || !data) return NextResponse.json({ error: "Invalid code" }, { status: 400 });
+  if (error || !data) {
+    return NextResponse.json({ error: error?.message ?? "Invalid code" }, { status: 400 });
+  }
+
+  if (data.used_at) {
+    return NextResponse.json({ error: "Code already used" }, { status: 400 });
+  }
 
   const now = new Date();
-  if (data.used_at) return NextResponse.json({ error: "Code already used" }, { status: 400 });
-  if (now > new Date(data.expires_at)) return NextResponse.json({ error: "Code expired" }, { status: 400 });
+  if (now > new Date(data.expires_at)) {
+    return NextResponse.json({ error: "Code expired" }, { status: 400 });
+  }
 
   await admin
     .from("extension_link_codes")
     .update({ used_at: now.toISOString() })
     .eq("code", code);
 
-  // Mint YOUR token for the extension (not Supabase refresh token)
+  // token will not be saved in DB
   const extToken = jwt.sign(
     { sub: data.user_id, scope: "extension" },
     process.env.EXTENSION_JWT_SECRET!,
