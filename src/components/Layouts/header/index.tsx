@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAppContext } from "../context";
 import { Navigation } from "./navigation";
 import { Notification } from "./notification";
+import { Icon } from "./icons";
 import { UserInfo } from "./user-info";
 
 export function Header() {
@@ -35,7 +36,7 @@ export function Header() {
     >
       <div className="flex items-center gap-4 overflow-hidden">
         {/* Icon remains bright */}
-        <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-sky-400 via-sky-500 to-indigo-500 shadow-xl shadow-sky-500/80 animate-pulse-slow" />
+        <Icon />
         <div className="flex flex-col">
           <span
             className={`block text-xs font-semibold tracking-[0.25em] text-gray-500 uppercase transition-all duration-300 ${
