@@ -112,7 +112,7 @@ export default function IntegrationsClient({
                   <button
                     onClick={connectExtension}
                     disabled={state.status === "connecting" || state.status === "checking" || state.status === "connected"}
-                    className="rounded-xl bg-sky-300 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 cursor-pointer"
+                    className="rounded-xl bg-sky-300 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 cursor-pointer border-4 animate-pulse"
                     title="Click to connect the extension"
                   >
                     <RefreshIcon
