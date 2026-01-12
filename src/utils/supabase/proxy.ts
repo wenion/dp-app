@@ -55,7 +55,8 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims ?? null;
 
-  if (pathname.startsWith('/api')) {
+  // Allow API and home page requests to proceed without redirect
+  if (pathname.startsWith('/api') || pathname === "/") {
     return supabaseResponse;
   }
 
