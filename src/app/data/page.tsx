@@ -675,7 +675,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       )}
 
       {/* Table */}
-      <div className="border rounded-md overflow-auto [height:800px]:max-h-[700px]">
+      <div className="border rounded-md h-[700px] overflow-y-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
