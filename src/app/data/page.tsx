@@ -561,7 +561,11 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
                 return (
                   <MenubarItem
                     key={column.id}
-                    className="flex w-full items-center whitespace-nowrap px-2"
+                    className="flex w-full items-center whitespace-nowrap px-2 cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      column.toggleVisibility();
+                    }}
                   >
                     <Input
                       type="checkbox"
