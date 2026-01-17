@@ -561,7 +561,11 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
                 return (
                   <MenubarItem
                     key={column.id}
-                    className="flex w-full items-center whitespace-nowrap px-2"
+                    className="flex w-full items-center whitespace-nowrap px-2 cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      column.toggleVisibility();
+                    }}
                   >
                     <Input
                       type="checkbox"
@@ -675,7 +679,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       )}
 
       {/* Table */}
-      <div className="border rounded-md h-[700px] overflow-y-auto">
+      <div className="border rounded-md md:h-[400px] lg:h-[500px] xl:h-[600px] overflow-y-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
