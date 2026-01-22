@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { Trace } from "@/types/trace";
-import { handle } from "./aggregate";
+import { aggregateLocalContext, aggregateGlobalContext } from "./aggregate";
 import { transformation } from "./transformation";
 
 export async function POST(request: NextRequest) {
@@ -112,7 +112,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: rawError.message }, { status: 500 });
   }
 
-  const aggregatedTraces = handle(newTraces, lastTraces);
+  const interTraces = aggregateLocalContext(newTraces, lastTraces);
+  const aggregatedTraces = aggregateGlobalContext(interTraces);
   if (aggregatedTraces.length > 0) {
     // insert aggregated traces
     const execute = async (data: Trace) => {
