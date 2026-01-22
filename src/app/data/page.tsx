@@ -24,8 +24,8 @@ import { Input } from "@/components/ui/input";
 import {
   RotateCcw as RefreshIcon,
   ArrowUpDown as SortIcon,
-  ArrowUp as ArrowUpIcon,
-  ArrowDown as ArrowDownIcon,
+  ArrowDownAZ as ArrowUpIcon,
+  ArrowDownZA as ArrowDownIcon,
   Play as NextIcon,
   FastForward as LastIcon,
   Rewind as FirstIcon,
@@ -71,7 +71,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   const [totalRows, setTotalRows] = useState(0);
 
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "created_at", desc: true },
+    { id: "event_time", desc: true },
   ]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -80,6 +80,9 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   >({});
   const [rowSelection, setRowSelection] = useState({});
 
+  const [eventTypes, setEventTypes] = useState<string[]>([]);
+  const [eventTypeFilter, setEventTypeFilter] = useState<string | null>(null);
+
   const [pageIndex, setPageIndex] = useState(0); // 0-based
   const [pageSize, setPageSize] = useState(defaultPageSize);
 
@@ -87,6 +90,10 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { session } = useAppContext();
+
+  const sortedEventTypes = useMemo(() => {
+    return [...eventTypes].sort();
+  }, [eventTypes]);
 
   const highlightText = (text: string, query: string) => {
     if (typeof text !== "string" || !query) {
@@ -145,7 +152,31 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       },
       {
         accessorKey: "event_type",
-        header: "Event Type",
+        header: () => {
+          return (
+            <div className="flex flex-col gap-1 items-center justify-between">
+              <span>Event Type</span>
+
+              <select
+                className="text-xs border rounded px-1 py-0.5 cursor-pointer"
+                value={eventTypeFilter ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value || null;
+                  setEventTypeFilter(v);
+                  setPageIndex(0);
+                }}
+              >
+                <option value="">All</option>
+                {sortedEventTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        },
+        enableSorting: eventTypeFilter ? false : true,
         cell: ({ getValue }) => {
           const v = getValue<string>();
           return v ?
@@ -344,7 +375,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         },
       },
     ],
-    [searchInput]
+    [searchInput, sortedEventTypes, eventTypeFilter]
   );
 
   const fetchData = useCallback(async () => {
@@ -354,7 +385,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     // Determine sorting parameters
     const firstSort = sorting[0];
     // if no sorting, firstSort == null default to created_at desc
-    const sortBy = (firstSort && firstSort.id !== "select") ? firstSort.id : "created_at";
+    const sortBy = (firstSort && firstSort.id !== "select") ? firstSort.id : "event_time";
     const sortDesc = firstSort ? firstSort.desc : true;
 
     // Build query parameters
@@ -364,6 +395,11 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       sortBy,
       sortDesc: sortDesc.toString(),
       globalFilter: globalFilter.trim(),
+      eventTypeFilter: eventTypeFilter ?? "",
+    });
+
+    await fetch("/api/v1/aggregate",{
+      method: "POST",
     });
 
     try {
@@ -385,18 +421,44 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       setErrorMsg(error instanceof Error ? error.message : "Failed to load traces");
     }
 
+
     setIsLoading(false);
   }, [
     pageIndex,
     pageSize,
     globalFilter,
+    eventTypeFilter,
     sorting,
   ]);
+
+  const fetchEventTypes = useCallback(async () => {
+    try {
+      const response = await fetch("/api/traces/columns");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setEventTypes(result.data ?? []);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : "Failed to load event types");
+    }
+  }, []);
 
   // ---- Fetch data from Supabase whenever page, size, sorting, or filter changes ----
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, eventTypeFilter]);
+
+  useEffect(() => {
+    fetchEventTypes();
+  }, [fetchEventTypes]);
 
   const pageCount =
     pageSize > 0 ? Math.ceil((totalRows || 0) / pageSize) : 0;
@@ -488,7 +550,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     const params = new URLSearchParams({
       from: exportFrom.toISOString(),
       to: exportTo.toISOString(),
-      sortBy: sorting[0]?.id ?? "created_at",
+      sortBy: sorting[0]?.id ?? "event_time",
       sortDesc: String(sorting[0]?.desc ?? true),
       globalFilter,
     });
@@ -525,7 +587,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 
     const params = new URLSearchParams({
       limit: maxRows.toString(),
-      sortBy: sorting[0]?.id ?? "created_at",
+      sortBy: sorting[0]?.id ?? "event_time",
       sortDesc: String(sorting[0]?.desc ?? true),
       globalFilter,
     });
@@ -690,7 +752,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
                   return (
                     <th
                       key={header.id}
-                      className="px-2 py-2 min-w-16 max-w-28 border-b border-x text-left font-semibold whitespace-nowrap"
+                      className="px-2 py-2 border-b border-x text-left font-semibold whitespace-nowrap"
                     >
                       {header.isPlaceholder ? null : (
                         <div className="flex items-center gap-1 justify-between">
@@ -701,7 +763,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
                           {canSort && (
                             <Button
                               variant="outline"
-                              className="h-4 w-4 border-none cursor-pointer"
+                              className="h-8 w-4 border-none cursor-pointer"
                               onClick={
                                 canSort
                                   ? header.column.getToggleSortingHandler()
