@@ -84,7 +84,7 @@ function matchesKeydownWithAPIInput(
   return false;
 }
 
-export function handle(traces: RawTrace[], lastTraces: RawTrace[]) : RawTrace[] {
+export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]) : RawTrace[] {
   const results: RawTrace[] = [];
 
   let lastFlush: RawTrace | null = null;
@@ -617,6 +617,46 @@ export function handle(traces: RawTrace[], lastTraces: RawTrace[]) : RawTrace[] 
     prev3 = prev2;
     prev2 = prev;
     prev = trace;
+  }
+
+  return results;
+}
+
+export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
+  const mutationKey = (t: RawTrace): string =>
+    `${t.url ?? ""}::${t.user_id ?? ""}::${t.container_id ?? ""}`;
+
+  const latestMap = new Map<string, RawTrace>();
+  const results: RawTrace[] = [];
+
+  for (const trace of traces) {
+    if (trace.event_type !== "mutation") continue;
+
+    const key = mutationKey(trace);
+    const existing = latestMap.get(key);
+
+    if (!existing) {
+      latestMap.set(key, trace);
+    } else {
+      const existingTs = existing.timestamp ?? -Infinity;
+      const currentTs = trace.timestamp ?? -Infinity;
+
+      if (currentTs >= existingTs) {
+        latestMap.set(key, trace);
+      }
+    }
+  }
+
+  for (const trace of traces) {
+    if (trace.event_type === "mutation") {
+      const key = mutationKey(trace);
+      const latest = latestMap.get(key);
+      if (latest?.id === trace.id) {
+        results.push(trace);
+      }
+    } else {
+      results.push(trace);
+    }
   }
 
   return results;
