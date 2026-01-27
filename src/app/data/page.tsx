@@ -33,6 +33,7 @@ import {
   Download as ExportIcon,
 } from 'lucide-react';
 import { useAppContext } from "@/components/Layouts/context";
+import { EditableCell } from "./EditableCell";
 
 export type Trace = {
   id: number;
@@ -224,20 +225,8 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         accessorKey: "message",
         header: "Message",
         cell: ({ getValue }) => {
-          const v = getValue<string | null>() || "";
-
-          if (!v) {
-            return <span className="text-gray-300">NULL</span>;
-          }
-
-          const truncated =
-            v.length > 80 ? v.slice(0, 80) + "…" : v;
-
-          return (
-            <span title={v}>
-              {highlightText(truncated, searchInput)}
-            </span>
-          );
+          const value = getValue<string | null>();
+          return <EditableCell value={value} searchInput={searchInput} />;
         },
       },
       {
