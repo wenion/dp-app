@@ -99,6 +99,10 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
       if (t.start_position == null || t.end_position == null) {
         t.start_position = lastFlush ? lastFlush.end_position : null;
         t.end_position = t.start_position ? t.start_position  + LENGTH : null;
+        if (t.event_value === "Backspace") {
+          t.start_position = lastFlush ? lastFlush.end_position : null;
+          t.end_position = t.start_position ? t.start_position - LENGTH : null;
+        }
       }
       if (t.event_value && t.event_value.length > 0 && t.event_state === "") {
         if (t.event_value === "Backspace") {
@@ -163,9 +167,16 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
               }
             }
             else if (next1.element_type === "delete") {
-              prev.start_position = next1.start_position;
-              prev.end_position = next1.end_position;
-              eventPositionChanged = true;
+              if (prev.event_value === "Backspace") {
+                prev.start_position = next1.start_position;
+                if (next1.start_position === next1.end_position && next1.start_position) {
+                  prev.end_position = next1.start_position - 1;
+                }
+                else {
+                  prev.end_position = next1.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -191,10 +202,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next2.element_type === "delete") {
-              prev.start_position = next2.start_position;
-              prev.end_position = next2.end_position;
-              eventPositionChanged = true;
+            else if (next2.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next2.start_position;
+                if (next2.start_position === next2.end_position && next2.start_position) {
+                  prev.end_position = next2.start_position - 1;
+                }
+                else {
+                  prev.end_position = next2.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -220,10 +238,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next3.element_type === "delete") {
-              prev.start_position = next3.start_position;
-              prev.end_position = next3.end_position;
-              eventPositionChanged = true;
+            else if (next3.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next3.start_position;
+                if (next3.start_position === next3.end_position && next3.start_position) {
+                  prev.end_position = next3.start_position - 1;
+                }
+                else {
+                  prev.end_position = next3.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -321,10 +346,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next1.element_type === "delete") {
-              prev.start_position = next1.start_position;
-              prev.end_position = next1.end_position;
-              eventPositionChanged = true;
+            else if (next1.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next1.start_position;
+                if (next1.start_position === next1.end_position && next1.start_position) {
+                  prev.end_position = next1.start_position - 1;
+                }
+                else {
+                  prev.end_position = next1.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -350,10 +382,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next2.element_type === "delete") {
-              prev.start_position = next2.start_position;
-              prev.end_position = next2.end_position;
-              eventPositionChanged = true;
+            else if (next2.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next2.start_position;
+                if (next2.start_position === next2.end_position && next2.start_position) {
+                  prev.end_position = next2.start_position - 1;
+                }
+                else {
+                  prev.end_position = next2.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -379,10 +418,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next3.element_type === "delete") {
-              prev.start_position = next3.start_position;
-              prev.end_position = next3.end_position;
-              eventPositionChanged = true;
+            else if (next3.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next3.start_position;
+                if (next3.start_position === next3.end_position && next3.start_position) {
+                  prev.end_position = next3.start_position - 1;
+                }
+                else {
+                  prev.end_position = next3.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -442,9 +488,16 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
             }
           }
           else if (trace.element_type === "delete") {
-            prev.start_position = trace.start_position;
-            prev.end_position = trace.end_position ? trace.end_position - 1 : null;
-            eventPositionChanged = true;
+            if (prev.event_value === "Backspace") {
+              prev.start_position = trace.start_position;
+              if (trace.start_position === trace.end_position && trace.start_position) {
+                prev.end_position = trace.start_position - 1;
+              }
+              else {
+                prev.end_position = trace.end_position;
+              }
+              eventPositionChanged = true;
+            }
           }
         }
 
@@ -469,10 +522,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next1.element_type === "delete") {
-              prev.start_position = next1.start_position;
-              prev.end_position = next1.end_position;
-              eventPositionChanged = true;
+            else if (next1.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next1.start_position;
+                if (next1.start_position === next1.end_position && next1.start_position) {
+                  prev.end_position = next1.start_position - 1;
+                }
+                else {
+                  prev.end_position = next1.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -498,10 +558,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next2.element_type === "delete") {
-              prev.start_position = next2.start_position;
-              prev.end_position = next2.end_position;
-              eventPositionChanged = true;
+            else if (next2.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next2.start_position;
+                if (next2.start_position === next2.end_position && next2.start_position) {
+                  prev.end_position = next2.start_position - 1;
+                }
+                else {
+                  prev.end_position = next2.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -527,10 +594,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && next3.element_type === "delete") {
-              prev.start_position = next3.start_position;
-              prev.end_position = next3.end_position;
-              eventPositionChanged = true;
+            else if (next3.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = next3.start_position;
+                if (next3.start_position === next3.end_position && next3.start_position) {
+                  prev.end_position = next3.start_position - 1;
+                }
+                else {
+                  prev.end_position = next3.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -556,10 +630,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && prev2.element_type === "delete") {
-              prev.start_position = prev2.start_position;
-              prev.end_position = prev2.end_position;
-              eventPositionChanged = true;
+            else if (prev2.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = prev2.start_position;
+                if (prev2.start_position === prev2.end_position && prev2.start_position) {
+                  prev.end_position = prev2.start_position - 1;
+                }
+                else {
+                  prev.end_position = prev2.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -585,10 +666,17 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
                 eventPositionChanged = true;
               }
             }
-            else if (!eventPositionChanged && prev3.element_type === "delete") {
-              prev.start_position = prev3.start_position;
-              prev.end_position = prev3.end_position;
-              eventPositionChanged = true;
+            else if (prev3.element_type === "delete") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
+                prev.start_position = prev3.start_position;
+                if (prev3.start_position === prev3.end_position && prev3.start_position) {
+                  prev.end_position = prev3.start_position - 1;
+                }
+                else {
+                  prev.end_position = prev3.end_position;
+                }
+                eventPositionChanged = true;
+              }
             }
           }
         }
@@ -624,7 +712,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
 export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
   const mutationKey = (t: RawTrace): string =>
-    `${t.url ?? ""}::${t.user_id ?? ""}::${t.container_id ?? ""}`;
+    `${t.user_id ?? ""}::${t.session_id ?? ""}::${t.tag ?? ""}`;
 
   const latestMap = new Map<string, RawTrace>();
   const results: RawTrace[] = [];

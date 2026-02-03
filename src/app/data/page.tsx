@@ -343,8 +343,17 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         accessorKey: "event_state",
         header: "Event State",
         cell: ({ getValue }) => {
-          const v = getValue<string>();
-          return v ? highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+          const v = getValue<string | null>() || "";
+          if (!v) {
+            return <span className="text-gray-300">NULL</span>;
+          }
+          const truncated =
+            v.length > 60 ? v.slice(0, 60) + "…" : v;
+          return (
+            <span title={v}>
+              {highlightText(truncated, searchInput)}
+            </span>
+          );
         },
       },
       {
