@@ -40,11 +40,18 @@ function matchesKeydownWithUserInput(
   const keydownValue = keydownTrace.event_value;
   const inputValue = inputTrace.event_value;
 
-  if (keydownValue == null || inputValue == null) return false;
+  const keydownState = keydownTrace.event_state;
+  const inputState = inputTrace.event_state;
+
+  // if (keydownValue == null) return false;
 
   return (
     keydownValue === inputValue ||
-    ((keydownValue === "Backspace" || keydownValue === "Delete") && inputValue === "") ||
+    (
+      (keydownValue === "Backspace" || keydownValue === "Delete") &&
+      inputValue === null &&
+      inputState === keydownState?.slice(0, -1)
+    ) ||
     (keydownValue === "Enter" && inputValue === "\n")
   );
 }
@@ -97,11 +104,11 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
     if (t.event_type === "keydown") {
       const LENGTH = 1;
       if (t.start_position == null || t.end_position == null) {
-        t.start_position = lastFlush ? lastFlush.end_position : null;
-        t.end_position = t.start_position ? t.start_position  + LENGTH : null;
+        t.start_position = lastFlush?.end_position != null ? lastFlush.end_position : 0;
+        t.end_position = t?.start_position != null ? t.start_position  + LENGTH : 0;
         if (t.event_value === "Backspace") {
-          t.start_position = lastFlush ? lastFlush.end_position : null;
-          t.end_position = t.start_position ? t.start_position - LENGTH : null;
+          t.start_position = lastFlush?.end_position != null ? lastFlush.end_position : 0;
+          t.end_position = t.start_position && t.start_position > 0 ? t.start_position - LENGTH : 0;
         }
       }
       if (t.event_value && t.event_value.length > 0 && t.event_state === "") {
@@ -142,32 +149,37 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
         let eventStateChanged = false;
         let eventPositionChanged = false;
 
+        if (prev.event_value === "Backspace" && prev.event_state === "") {
+          prev.end_position = prev.start_position ? prev.start_position - 1 : null;
+          eventStateChanged = true;
+          eventPositionChanged = true;
+        }
+
         if (next1) {
           if (next1.event_type === "input") {
             if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1)) {
               // TODO
-              // prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
-              prev.event_state = next1.event_state;
+              prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
               eventStateChanged = true;
             }
 
             if (next1.source === "API" && matchesKeydownWithAPIInput(prev, next1)) {
-                prev.event_state = next1.event_state;
-                eventStateChanged = true;
+              prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
+              eventStateChanged = true;
             }
           }
 
           // Match with API UserEvent
           if (next1.event_type === "keystroke") {
             if (next1.element_type === "insert") {
-              if (next1.start_position && next1.event_value && next1.event_value.slice(-1) === prev.event_value) {
+              if (!eventPositionChanged && next1.start_position && next1.event_value && next1.event_value.slice(-1) === prev.event_value) {
                 prev.start_position = next1.start_position - 1 + next1.event_value.length - prev.event_value.length;
                 prev.end_position = prev.start_position + prev.event_value.length;
                 eventPositionChanged = true;
               }
             }
             else if (next1.element_type === "delete") {
-              if (prev.event_value === "Backspace") {
+              if (!eventPositionChanged && prev.event_value === "Backspace") {
                 prev.start_position = next1.start_position;
                 if (next1.start_position === next1.end_position && next1.start_position) {
                   prev.end_position = next1.start_position - 1;
@@ -311,15 +323,21 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
         let eventStateChanged = false;
         let eventPositionChanged = false;
 
+        if (prev.event_value === "Backspace" && prev.event_state === "") {
+          prev.end_position = prev.start_position ? prev.start_position - 1 : null;
+          eventStateChanged = true;
+          eventPositionChanged = true;
+        }
+
         if (
           trace.source === "UserEvent" &&
           matchesKeydownWithUserInput(prev, trace)
         ) {
-          prev.event_state = trace.event_state;
+          prev.event_state = eventStateChanged ? prev.event_state : trace.event_state;
           eventStateChanged = true;
         }
         if (trace.source === "API" && matchesKeydownWithAPIInput(prev, trace)) {
-          prev.event_state = trace.event_state;
+          prev.event_state = eventStateChanged ? prev.event_state : trace.event_state;
           eventStateChanged = true;
         }
 
@@ -477,18 +495,24 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
         let eventStateChanged = false;
         let eventPositionChanged = false;
 
+        if (prev.event_value === "Backspace" && prev.event_state === "") {
+          prev.end_position = prev.start_position ? prev.start_position - 1 : null;
+          eventStateChanged = true;
+          eventPositionChanged = true;
+        }
+
         // need to address after event_state filled
         // this trace will not be input, keydown
         if (trace.event_type === "keystroke") {
           if (trace.element_type === "insert") {
-            if (trace.start_position && trace.event_value && trace.event_value.slice(-1) === prev.event_value) {
+            if (!eventPositionChanged && trace.start_position && trace.event_value && trace.event_value.slice(-1) === prev.event_value) {
               prev.start_position = trace.start_position - 1 + trace.event_value.length - prev.event_value.length;
               prev.end_position = prev.start_position + prev.event_value.length;
               eventPositionChanged = true;
             }
           }
           else if (trace.element_type === "delete") {
-            if (prev.event_value === "Backspace") {
+            if (!eventPositionChanged && prev.event_value === "Backspace") {
               prev.start_position = trace.start_position;
               if (trace.start_position === trace.end_position && trace.start_position) {
                 prev.end_position = trace.start_position - 1;
@@ -504,12 +528,12 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
         if (next1) {
           if (next1.event_type === "input") {
             if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1)) {
-              prev.event_state = next1.event_state;
+              prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
               eventStateChanged = true;
             }
 
             if (next1.source === "API" && matchesKeydownWithAPIInput(prev, next1)) {
-              prev.event_state = next1.event_state;
+              prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
               eventStateChanged = true;
             }
           }
