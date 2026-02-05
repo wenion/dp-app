@@ -298,6 +298,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
       // keydown -> ki
       trace.event_type = "ki";
+      trace.origin_value = trace.event_state;
       if (trace.code === "Backspace") {
         trace.end_position = trace.start_position ? trace.start_position - 1 : null;
       }
@@ -766,7 +767,12 @@ export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
       if (latest?.id === trace.id) {
         results.push(trace);
       }
-    } else {
+    }
+    else if (trace.event_value === "Backspace") {
+      trace.event_value = trace.origin_value?.slice(-1) || "Delete";
+      results.push(trace);
+    }
+    else {
       results.push(trace);
     }
   }
