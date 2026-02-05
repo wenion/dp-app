@@ -234,7 +234,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         header: "Cursor Pos",
         cell: ({ getValue }) => {
           const v = getValue<string>();
-          return v ?
+          return v !== null ?
             highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
         },
       },
@@ -243,16 +243,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         header: "End Pos",
         cell: ({ getValue }) => {
           const v = getValue<string>();
-          return v ?
-            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
-        },
-      },
-      {
-        accessorKey: "event_value",
-        header: "Event Value",
-        cell: ({ getValue }) => {
-          const v = getValue<string>();
-          return v ?
+          return v !== null ?
             highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
         },
       },
@@ -340,20 +331,24 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         },
       },
       {
+        accessorKey: "event_value",
+        header: "Event Value",
+        cell: ({ getValue, row }) => {
+          let v = getValue<string>();
+          const eventType = row.original.event_type;
+          if (eventType === "delete") {
+            v = "delete \"" + v + "\"";
+          }
+          return v ?
+            highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
+        },
+      },
+      {
         accessorKey: "event_state",
         header: "Event State",
         cell: ({ getValue }) => {
-          const v = getValue<string | null>() || "";
-          if (!v) {
-            return <span className="text-gray-300">NULL</span>;
-          }
-          const truncated =
-            v.length > 60 ? v.slice(0, 60) + "…" : v;
-          return (
-            <span title={v}>
-              {highlightText(truncated, searchInput)}
-            </span>
-          );
+          const value = getValue<string | null>();
+          return <EditableCell value={value} searchInput={searchInput} />;
         },
       },
       {
@@ -618,6 +613,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
             <MenubarContent>
               {table.getAllLeafColumns().map((column) => {
                 if (column.id === "select") return null;
+                if (typeof column.columnDef.header !== "string") return null;
                 return (
                   <MenubarItem
                     key={column.id}
