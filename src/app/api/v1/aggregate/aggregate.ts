@@ -114,6 +114,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
       if (t.event_value && t.event_value.length > 0 && t.event_state === "") {
         if (t.event_value === "Backspace") {
           t.event_state = lastFlush?.event_state?.slice(0, -1) || "";
+          t.event_value = lastFlush?.event_state?.slice(-LENGTH) || null;
         }
         else if (t.event_value.length === LENGTH) {
           t.event_state = lastFlush?.event_state + t.event_value;
@@ -146,18 +147,19 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
       if (prev && prev.event_type === "ki") {
         prev.event_type = "keydown";
 
+        let isBackspace = false;
         let eventStateChanged = false;
         let eventPositionChanged = false;
 
         if (prev.event_value === "Backspace" && prev.event_state === "") {
           prev.end_position = prev.start_position ? prev.start_position - 1 : null;
-          eventStateChanged = true;
+          isBackspace = true;
           eventPositionChanged = true;
         }
 
         if (next1) {
           if (next1.event_type === "input") {
-            if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1)) {
+            if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1) && !isBackspace) {
               // TODO
               prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
               eventStateChanged = true;
@@ -195,7 +197,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (next2) {
           if (next2.event_type === "input") {
-            if (next2.source === "UserEvent" && matchesKeydownWithUserInput(prev, next2)) {
+            if (next2.source === "UserEvent" && matchesKeydownWithUserInput(prev, next2) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next2.event_state;
               eventStateChanged = true;
             }
@@ -231,7 +233,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (next3) {
           if (next3.event_type === "input") {
-            if (next3.source === "UserEvent" && matchesKeydownWithUserInput(prev, next3)) {
+            if (next3.source === "UserEvent" && matchesKeydownWithUserInput(prev, next3) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next3.event_state;
               eventStateChanged = true;
             }
@@ -267,7 +269,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (prev2) {
           if (prev2.event_type === "input") {
-            if (prev2.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev2)) {
+            if (prev2.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev2) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : prev2.event_state;
               eventStateChanged = true;
             }
@@ -281,7 +283,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (prev3) {
           if (prev3.event_type === "input") {
-            if (prev3.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev3)) {
+            if (prev3.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev3) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : prev3.event_state;
               eventStateChanged = true;
             }
@@ -321,18 +323,20 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
       if (prev && prev.event_type === "ki") {
         prev.event_type = "keydown";
 
+        let isBackspace = false;
         let eventStateChanged = false;
         let eventPositionChanged = false;
 
         if (prev.event_value === "Backspace" && prev.event_state === "") {
           prev.end_position = prev.start_position ? prev.start_position - 1 : null;
-          eventStateChanged = true;
+          isBackspace = true;
           eventPositionChanged = true;
         }
 
         if (
           trace.source === "UserEvent" &&
-          matchesKeydownWithUserInput(prev, trace)
+          matchesKeydownWithUserInput(prev, trace) &&
+          !isBackspace
         ) {
           prev.event_state = eventStateChanged ? prev.event_state : trace.event_state;
           eventStateChanged = true;
@@ -345,7 +349,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
         // must go around the context, to fill the missing attributes
         if (next1) {
           if (next1.event_type === "input" ) {
-            if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1)) {
+            if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
               eventStateChanged = true;
             }
@@ -382,7 +386,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (next2) {
           if (next2.event_type === "input") {
-            if (next2.source === "UserEvent" && matchesKeydownWithUserInput(prev, next2)) {
+            if (next2.source === "UserEvent" && matchesKeydownWithUserInput(prev, next2) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next2.event_state;
               eventStateChanged = true;
             }
@@ -418,7 +422,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (next3) {
           if (next3.event_type === "input") {
-            if (next3.source === "UserEvent" && matchesKeydownWithUserInput(prev, next3)) {
+            if (next3.source === "UserEvent" && matchesKeydownWithUserInput(prev, next3) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next3.event_state;
               eventStateChanged = true;
             }
@@ -454,7 +458,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (prev2) {
           if (prev2.event_type === "input") {
-            if (prev2.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev2)) {
+            if (prev2.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev2) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : prev2.event_state;
               eventStateChanged = true;
             }
@@ -471,7 +475,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (prev3) {
           if (prev3.event_type === "input") {
-            if (prev3.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev3)) {
+            if (prev3.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev3) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : prev3.event_state;
               eventStateChanged = true;
             }
@@ -493,12 +497,13 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
       if (prev && prev.event_type === "ki") {
         prev.event_type = "keydown";
 
+        let isBackspace = false;
         let eventStateChanged = false;
         let eventPositionChanged = false;
 
         if (prev.event_value === "Backspace" && prev.event_state === "") {
           prev.end_position = prev.start_position ? prev.start_position - 1 : null;
-          eventStateChanged = true;
+          isBackspace = true;
           eventPositionChanged = true;
         }
 
@@ -528,7 +533,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (next1) {
           if (next1.event_type === "input") {
-            if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1)) {
+            if (next1.source === "UserEvent" && matchesKeydownWithUserInput(prev, next1) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next1.event_state;
               eventStateChanged = true;
             }
@@ -564,7 +569,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (next2) {
           if (next2.event_type === "input") {
-            if (next2.source === "UserEvent" && matchesKeydownWithUserInput(prev, next2)) {
+            if (next2.source === "UserEvent" && matchesKeydownWithUserInput(prev, next2) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next2.event_state;
               eventStateChanged = true;
             }
@@ -600,7 +605,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (next3) {
           if (next3.event_type === "input") {
-            if (next3.source === "UserEvent" && matchesKeydownWithUserInput(prev, next3)) {
+            if (next3.source === "UserEvent" && matchesKeydownWithUserInput(prev, next3) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : next3.event_state;
               eventStateChanged = true;
             }
@@ -636,7 +641,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (prev2) {
           if (prev2.event_type === "input") {
-            if (prev2.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev2)) {
+            if (prev2.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev2) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : prev2.event_state;
               eventStateChanged = true;
             }
@@ -672,7 +677,7 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
         if (prev3) {
           if (prev3.event_type === "input") {
-            if (prev3.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev3)) {
+            if (prev3.source === "UserEvent" && matchesKeydownWithUserInput(prev, prev3) && !isBackspace) {
               prev.event_state = eventStateChanged ? prev.event_state : prev3.event_state;
               eventStateChanged = true;
             }
@@ -743,7 +748,7 @@ export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
   const results: RawTrace[] = [];
 
   for (const trace of traces) {
-    if (trace.event_type !== "mutation") continue;
+    if (trace.source !== "Mutation") continue;
 
     const key = mutationKey(trace);
     const existing = latestMap.get(key);
@@ -761,10 +766,11 @@ export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
   }
 
   for (const trace of traces) {
-    if (trace.event_type === "mutation") {
+    if (trace.source === "Mutation") {
       const key = mutationKey(trace);
       const latest = latestMap.get(key);
       if (latest?.id === trace.id) {
+        trace.event_type = trace.author == "AI" ? "ai_response" : "user_query";
         results.push(trace);
       }
     }
