@@ -100,9 +100,24 @@ export async function transformation(
     else if (trace.event_type === "keydown") {
       const startPosition = trace.start_position;
       const endPosition = trace.end_position;
-      if (startPosition !== null && endPosition !== null) {
-        const length = endPosition - startPosition;
-        event_type = length > 0 ? "insert" : length == 0 ? "keydown" : "delete";
+      const value = trace.event_value;
+      const state = trace.event_state;
+
+      if (value && value.length > 1) {
+        if (value === "Enter") {
+          event_type = "insert";
+        }
+        else {
+          event_type = "keydown";
+        }
+      }
+      else if (value && value.length === 1) {
+        if ((startPosition != null) && (state?.slice(startPosition, startPosition + 1) === value)) {
+          event_type = "insert";
+        }
+        else {
+          event_type = "delete";
+        }
       }
     }
     else if (trace.event_type === "mutation") {

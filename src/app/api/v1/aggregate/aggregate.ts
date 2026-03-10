@@ -43,15 +43,23 @@ function matchesKeydownWithUserInput(
   const keydownState = keydownTrace.event_state;
   const inputState = inputTrace.event_state;
 
-  // if (keydownValue == null) return false;
+  let correctionValue = null;
+  const pos = keydownTrace.start_position;
+  if (keydownValue === "Delete" && pos != null && keydownState) {
+    correctionValue = keydownState.slice(0, pos) + keydownState.slice(pos + 1);
+  }
+  else if (keydownValue === "Backspace" && pos != null && pos > 0 && keydownState) {
+    correctionValue = keydownState.slice(0, pos - 1) + keydownState.slice(pos);
+  }
 
   return (
     keydownValue === inputValue ||
     (
-      (keydownValue === "Backspace" || keydownValue === "Delete") &&
+      keydownValue === "Backspace" &&
       inputValue === null &&
-      inputState === keydownState?.slice(0, -1)
+      inputState === correctionValue
     ) ||
+    (keydownValue === "Delete" && inputValue === null && inputState === correctionValue) ||
     (keydownValue === "Enter" && inputValue === "\n")
   );
 }
@@ -110,6 +118,9 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
           t.start_position = lastFlush?.end_position != null ? lastFlush.end_position : 0;
           t.end_position = t.start_position && t.start_position > 0 ? t.start_position - LENGTH : 0;
         }
+        // else if (t.event_value === "Delete") {
+
+        // }
       }
       if (t.event_value && t.event_value.length > 0 && t.event_state === "") {
         if (t.event_value === "Backspace") {
@@ -117,12 +128,15 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
           t.event_value = lastFlush?.event_state?.slice(-LENGTH) || null;
         }
         else if (t.event_value.length === LENGTH) {
-          t.event_state = lastFlush?.event_state + t.event_value;
+          t.event_state = (lastFlush?.event_state || "") + t.event_value;
         }
         else {
           t.event_state = lastFlush?.event_state || "";
         }
       }
+      // else if (t.event_value === "Enter") {
+      //   t.event_state = t.event_state + "\n";
+      // }
     }
     results.push(t);
     lastFlush = t;
@@ -311,7 +325,12 @@ export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]
 
       }
       else if (trace.code === "Enter") {
-
+      }
+      else if (trace.code === "ArrowLeft") {
+        trace.end_position = trace.start_position ? trace.start_position - 1 : null;
+      }
+      else if (trace.code === "ArrowRight") {
+        trace.end_position = trace.start_position ? trace.start_position + 1 : null;
       }
       else {
         if (trace.start_position != null && trace.event_value != null) {
@@ -775,7 +794,17 @@ export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
       }
     }
     else if (trace.event_value === "Backspace") {
-      trace.event_value = trace.origin_value?.slice(-1) || "Delete";
+      let pos = trace.start_position;
+      if (pos != null && trace.origin_value != null && pos > 0) {
+        trace.event_value = trace.origin_value?.slice(pos - 1, pos) || "Backspace";
+      }
+      results.push(trace);
+    }
+    else if (trace.event_value === "Delete") {
+      let pos = trace.start_position;
+      if (pos != null && trace.origin_value != null && pos < trace.origin_value.length) {
+        trace.event_value = trace.origin_value?.slice(pos, pos + 1) || "Delete";
+      }
       results.push(trace);
     }
     else {

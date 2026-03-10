@@ -337,7 +337,9 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
           let v = getValue<string>();
           const eventType = row.original.event_type;
           if (eventType === "delete") {
-            v = "delete \"" + v + "\"";
+            if (v.length <= 1) {
+              v = "delete \"" + v + "\"";
+            }
           }
           return v ?
             highlightText(v, searchInput) : <span className="text-gray-300">NULL</span>;
