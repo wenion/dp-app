@@ -99,7 +99,7 @@ function matchesKeydownWithAPIInput(
   return false;
 }
 
-export function aggregateLocalContext(traces: RawTrace[], lastTraces: RawTrace[]) : RawTrace[] {
+export function aggregateKeyDownEvents(traces: RawTrace[], lastTraces: RawTrace[]) : RawTrace[] {
   const results: RawTrace[] = [];
 
   let lastFlush: RawTrace | null = null;
