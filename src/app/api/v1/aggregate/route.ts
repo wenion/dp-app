@@ -3,7 +3,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { Trace } from "@/types/trace";
-import { aggregateKeyDownEvents, aggregateGlobalContext } from "./aggregate";
+import {
+  aggregateKeyDownEvents,
+  aggregateAIEvents,
+  aggregateGlobalContext
+} from "./aggregate";
 import { transformation } from "./transformation";
 
 export async function POST(request: NextRequest) {
@@ -113,7 +117,8 @@ export async function POST(request: NextRequest) {
   }
 
   const interTraces = aggregateKeyDownEvents(newTraces, lastTraces);
-  const aggregatedTraces = aggregateGlobalContext(interTraces);
+  const aiAggregatedTraces = aggregateAIEvents(interTraces, lastTraces);
+  const aggregatedTraces = aggregateGlobalContext(aiAggregatedTraces);
   if (aggregatedTraces.length > 0) {
     // insert aggregated traces
     const execute = async (data: Trace) => {

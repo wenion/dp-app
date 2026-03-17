@@ -759,39 +759,60 @@ export function aggregateKeyDownEvents(traces: RawTrace[], lastTraces: RawTrace[
   return results;
 }
 
-export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
-  const mutationKey = (t: RawTrace): string =>
-    `${t.user_id ?? ""}::${t.session_id ?? ""}::${t.tag ?? ""}`;
-
-  const latestMap = new Map<string, RawTrace>();
+export function aggregateAIEvents(traces: RawTrace[], lastTraces: RawTrace[]): RawTrace[] {
   const results: RawTrace[] = [];
+  let lastFlush: RawTrace | null = null;
 
-  for (const trace of traces) {
-    if (trace.source !== "Mutation") continue;
-
-    const key = mutationKey(trace);
-    const existing = latestMap.get(key);
-
-    if (!existing) {
-      latestMap.set(key, trace);
-    } else {
-      const existingTs = existing.timestamp ?? -Infinity;
-      const currentTs = trace.timestamp ?? -Infinity;
-
-      if (currentTs >= existingTs) {
-        latestMap.set(key, trace);
-      }
+  for (const trace of lastTraces) {
+    if (trace.source === "Mutation") {
+      lastFlush = trace;
     }
   }
 
+  for (let i = 0; i < traces.length; i++) {
+    const trace = traces[i];
+
+    if (trace.source === "Mutation") {
+      if (!lastFlush) {
+        lastFlush = trace;
+      }
+      else if (
+        lastFlush.author === trace.author &&
+        lastFlush.message &&
+        trace.message?.startsWith(lastFlush.message)
+      ) {
+        lastFlush = trace;
+      }
+      else {
+        results.push(lastFlush);
+        lastFlush = trace;
+      }
+    }
+    else {
+      if (lastFlush) {
+        if (lastFlush.message !== "ChatGPT said:") {
+          results.push(lastFlush);
+        }
+        lastFlush = null;
+      }
+      results.push(trace);
+    }
+  }
+
+  if (lastFlush) {
+    results.push(lastFlush);
+  }
+
+  return results;
+}
+
+export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
+  const results: RawTrace[] = [];
+
   for (const trace of traces) {
     if (trace.source === "Mutation") {
-      const key = mutationKey(trace);
-      const latest = latestMap.get(key);
-      if (latest?.id === trace.id) {
-        trace.event_type = trace.author == "AI" ? "ai_response" : "user_query";
-        results.push(trace);
-      }
+      trace.event_type = trace.author == "AI" ? "ai_response" : "user_query";
+      results.push(trace);
     }
     else if (trace.event_value === "Backspace") {
       let pos = trace.start_position;
