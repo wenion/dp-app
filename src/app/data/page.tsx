@@ -721,6 +721,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
             size="icon"
             aria-label="Search / Refresh"
             className="cursor-pointer"
+            disabled={isLoading}
           >
             <RefreshIcon />
           </Button>
