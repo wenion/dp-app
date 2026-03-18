@@ -12,6 +12,17 @@ function getBearerToken(req: Request): string | null {
   return auth.slice(7);
 }
 
+function sanitizeString(str: string | null | undefined): string | null {
+  if (!str) return str ?? null;
+
+  // Remove invalid surrogate pairs
+  return str.replace(
+    /[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '' // high surrogate not followed by low
+  ).replace(
+    /(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '' // low surrogate without high
+  );
+}
+
 /** Remove undefined fields so Supabase insert is clean */
 function compact<T extends Record<string, any>>(obj: T): Partial<T> {
   return Object.fromEntries(
@@ -105,7 +116,7 @@ export async function POST(req: Request) {
       element_type: p.elementType ?? null,
       name: p.name ?? null,
       placeholder: p.placeholder ?? null,
-      text_content: p.textContent ?? null,
+      text_content: sanitizeString(p.textContent) ?? null,
       x_path: p.xpath ?? p.xPath ?? null,
       container_id: p.containerId ?? null,
 
@@ -129,7 +140,7 @@ export async function POST(req: Request) {
 
       // message & state
       label: p.label ?? null,
-      message: p.message ?? null,
+      message: sanitizeString(p.message) ?? null,
       event_value: p.eventValue ?? null,
       event_state: p.eventState ?? null,
       start_position: p.startPosition ?? null,

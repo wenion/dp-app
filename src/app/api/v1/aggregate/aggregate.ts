@@ -766,6 +766,7 @@ export function aggregateAIEvents(traces: RawTrace[], lastTraces: RawTrace[]): R
   for (const trace of lastTraces) {
     if (trace.source === "Mutation") {
       lastFlush = trace;
+      lastFlush.event_type = "skip";
     }
   }
 
@@ -779,12 +780,14 @@ export function aggregateAIEvents(traces: RawTrace[], lastTraces: RawTrace[]): R
       else if (
         lastFlush.author === trace.author &&
         lastFlush.message &&
-        trace.message?.startsWith(lastFlush.message)
+        trace.message?.startsWith(lastFlush.message.slice(0, 20))
       ) {
         lastFlush = trace;
       }
       else {
-        results.push(lastFlush);
+        if (lastFlush.event_type !== "skip") {
+          results.push(lastFlush);
+        }
         lastFlush = trace;
       }
     }
@@ -799,7 +802,7 @@ export function aggregateAIEvents(traces: RawTrace[], lastTraces: RawTrace[]): R
     }
   }
 
-  if (lastFlush) {
+  if (lastFlush && lastFlush.event_type !== "skip") {
     results.push(lastFlush);
   }
 
