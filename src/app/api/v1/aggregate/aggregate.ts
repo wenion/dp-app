@@ -817,19 +817,22 @@ export function aggregateGlobalContext(traces: RawTrace[]): RawTrace[] {
       trace.event_type = trace.author == "AI" ? "ai_response" : "user_query";
       results.push(trace);
     }
-    else if (trace.event_value === "Backspace") {
-      let pos = trace.start_position;
-      if (pos != null && trace.origin_value != null && pos > 0) {
-        trace.event_value = trace.origin_value?.slice(pos - 1, pos) || "Backspace";
-      }
-      results.push(trace);
-    }
-    else if (trace.event_value === "Delete") {
-      let pos = trace.start_position;
-      if (pos != null && trace.origin_value != null && pos < trace.origin_value.length) {
-        trace.event_value = trace.origin_value?.slice(pos, pos + 1) || "Delete";
-      }
-      results.push(trace);
+    // else if (trace.event_value === "Backspace") {
+    //   let pos = trace.start_position;
+    //   if (pos != null && trace.origin_value != null && pos > 0) {
+    //     trace.event_value = trace.origin_value?.slice(pos - 1, pos) || "Backspace";
+    //   }
+    //   results.push(trace);
+    // }
+    // else if (trace.event_value === "Delete") {
+    //   let pos = trace.start_position;
+    //   if (pos != null && trace.origin_value != null && pos < trace.origin_value.length) {
+    //     trace.event_value = trace.origin_value?.slice(pos, pos + 1) || "Delete";
+    //   }
+    //   results.push(trace);
+    // }
+    else if (trace.event_type === "keydown" || trace.event_type === "input") {
+      // remove noisy keydown and input events
     }
     else {
       results.push(trace);

@@ -99,7 +99,7 @@ export async function POST(req: Request) {
   }
 
   /* ------------------------- Transform traces -------------------------- */
-  const traces = payload.map((p: any, index: number) =>
+  const tracesRaw = payload.map((p: any, index: number) =>
     compact({
       source: p.source ?? "unknown",
       session_id: p.sessionId ?? null,
@@ -152,6 +152,28 @@ export async function POST(req: Request) {
   );
 
   const admin = await createAdminClient();
+
+  /* --- ADD FILTER --- */
+  /* ------------------------- Deduplicate (keep last mutation, preserve order) -------------------------- */
+  const seen = new Set<string>();
+  const traces: typeof tracesRaw = [];
+
+  for (let i = tracesRaw.length - 1; i >= 0; i--) {
+    const t = tracesRaw[i];
+
+    if (t.event_type === "mutation") {
+      const key = `${t.session_id ?? "null"}__${t.name ?? "null"}`;
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        traces.push(t);
+      }
+    }
+    else {
+      traces.push(t);
+    }
+  }
+  traces.reverse();
 
   const { data, error } = await admin
     .from("raw_traces")

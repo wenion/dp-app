@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { Trace } from "@/types/trace";
 import {
-  aggregateKeyDownEvents,
   aggregateAIEvents,
   aggregateGlobalContext
 } from "./aggregate";
@@ -116,10 +115,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: rawError.message }, { status: 500 });
   }
 
-  const interTraces = aggregateKeyDownEvents(newTraces, lastTraces);
-  const aiAggregatedTraces = aggregateAIEvents(interTraces, lastTraces);
+  const aiAggregatedTraces = aggregateAIEvents(newTraces, lastTraces);
   const aggregatedTraces = aggregateGlobalContext(aiAggregatedTraces);
-  if (aggregatedTraces.length > 0) {
+  if (newTraces.length > 0) {
     // insert aggregated traces
     const execute = async (data: Trace) => {
       return await supabase
@@ -138,7 +136,7 @@ export async function POST(request: NextRequest) {
         status: "success",
         finished_at: new Date().toISOString(),
         count: newTraces.length,
-        end_raw_trace_id: aggregatedTraces[aggregatedTraces.length - 1]?.id || lastEndId,
+        end_raw_trace_id: newTraces[newTraces.length - 1]?.id || lastEndId,
       })
       .eq("id", run.id);
 
@@ -146,7 +144,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
-  else if (aggregatedTraces.length === 0) {
+  else if (newTraces.length === 0) {
     await supabase
       .from("aggregation_runs")
       .delete()

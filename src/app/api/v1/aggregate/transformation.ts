@@ -48,6 +48,7 @@ type TransformationResult = {
   errors: PostgrestSingleResponse<null>["error"][];
 };
 
+/* Transform RawTraces To Traces */
 export async function transformation(
   traces: RawTrace[],
   version: string,
@@ -123,6 +124,10 @@ export async function transformation(
     else if (trace.event_type === "mutation") {
       event_id = extractTurnNumber(trace.session_id);
       container_id = trace.session_id;
+    }
+    else if (trace.event_type === "keystroke") {
+      event_type = trace.element_type ? trace.element_type : "keystroke";
+      element_text = trace.key;
     }
     else if (trace.event_type === "copy") {
     }

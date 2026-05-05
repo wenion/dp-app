@@ -337,7 +337,7 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
           let v = getValue<string>();
           const eventType = row.original.event_type;
           if (eventType === "delete") {
-            if (v.length <= 1) {
+            if (v && v.length <= 1) {
               v = "delete \"" + v + "\"";
             }
           }
