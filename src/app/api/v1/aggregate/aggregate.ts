@@ -839,6 +839,18 @@ export function aggregateMutationEvents(traces: RawTrace[], lastTraces: RawTrace
       if (current.key === "Enter" && next && next.event_type === "mutation" && next.author ==="AI") {
         continue;
       }
+      else if (current.element_type === "spellcheck") {
+        current.author = "editor";
+
+        let reqId = current.event_id?.split("_")[0];
+        let last = results.length > 0 ? results[results.length - 1] : null;
+        let j = 0;
+        while (last && last.event_type === "keystroke" && reqId === last.event_id?.split("_")[0]) {
+          last.author = "editor";
+          last = results[results.length - 1 - j];
+          j++;
+        }
+      }
     }
     else if (current.event_type === "keydown" || current.event_type === "input") {
       continue;
