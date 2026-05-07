@@ -155,25 +155,21 @@ export async function POST(req: Request) {
 
   /* --- ADD FILTER BEFORE INSERTING INTO RAW_TRACES --- */
   /* --- Deduplicate (in continuous traces, keep last mutation, preserve order) --- */
-  const seen = new Set<string>();
   const traces: typeof tracesRaw = [];
+  let prev = null;
 
-  for (let i = tracesRaw.length - 1; i >= 0; i--) {
-    const t = tracesRaw[i];
-
-    if (t.event_type === "mutation") {
-      const key = `${t.session_id ?? "null"}__${t.name ?? "null"}`;
-
-      if (!seen.has(key)) {
-        seen.add(key);
-        traces.push(t);
-      }
+  for (const current of tracesRaw) {
+    if (
+      prev && prev.source === "Mutation" && prev.tag === "SECTION" &&
+      current.source === "Mutation" && current.tag === "SECTION" &&
+      prev.session_id === current.session_id
+    ) {
+      traces.pop();
     }
-    else {
-      traces.push(t);
-    }
+
+    traces.push(current);
+    prev = current;
   }
-  traces.reverse();
 
   const { data, error } = await admin
     .from("raw_traces")
