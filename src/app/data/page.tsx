@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type DateRange } from "react-day-picker";
 import { startOfDay, endOfDay, format } from "date-fns";
 import {
@@ -89,6 +89,8 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement | null>(null);
+  const pendingPaginationScrollRef = useRef<"top" | "bottom" | null>(null);
 
   const { session } = useAppContext();
 
@@ -455,6 +457,23 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
     fetchEventTypes();
   }, [fetchEventTypes]);
 
+  useEffect(() => {
+    if (isLoading || !pendingPaginationScrollRef.current) return;
+
+    const scrollDirection = pendingPaginationScrollRef.current;
+    pendingPaginationScrollRef.current = null;
+
+    requestAnimationFrame(() => {
+      const tableContainer = tableContainerRef.current;
+      if (!tableContainer) return;
+
+      tableContainer.scrollTo({
+        top: scrollDirection === "bottom" ? tableContainer.scrollHeight : 0,
+        behavior: "auto",
+      });
+    });
+  }, [data, isLoading]);
+
   const pageCount =
     pageSize > 0 ? Math.ceil((totalRows || 0) / pageSize) : 0;
 
@@ -738,7 +757,10 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       )}
 
       {/* Table */}
-      <div className="border rounded-md md:h-[400px] lg:h-[500px] xl:h-[600px] overflow-y-auto">
+      <div
+        ref={tableContainerRef}
+        className="border rounded-md md:h-[400px] lg:h-[500px] xl:h-[600px] overflow-y-auto"
+      >
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -845,14 +867,20 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
         <div className="flex items-center gap-2">
           <button
             className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
-            onClick={() => setPageIndex(0)}
+            onClick={() => {
+              pendingPaginationScrollRef.current = "top";
+              setPageIndex(0);
+            }}
             disabled={pageIndex === 0}
           >
             First <FirstIcon className="w-4 h-4" />
           </button>
           <button
             className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
-            onClick={() => setPageIndex((p) => Math.max(p - 1, 0))}
+            onClick={() => {
+              pendingPaginationScrollRef.current = "bottom";
+              setPageIndex((p) => Math.max(p - 1, 0));
+            }}
             disabled={pageIndex === 0}
           >
             Prev <NextIcon className="rotate-180 w-4 h-4" />
@@ -865,16 +893,20 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
           </span>
           <button
             className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
-            onClick={() =>
-              setPageIndex((p) => (pageCount ? Math.min(p + 1, pageCount - 1) : p + 1))
-            }
+            onClick={() => {
+              pendingPaginationScrollRef.current = "top";
+              setPageIndex((p) => (pageCount ? Math.min(p + 1, pageCount - 1) : p + 1));
+            }}
             disabled={pageCount > 0 && pageIndex >= pageCount - 1}
           >
             Next <NextIcon className="w-4 h-4" />
           </button>
           <button
             className="flex border rounded gap-2 px-2 py-1 disabled:opacity-50 cursor-pointer items-center"
-            onClick={() => pageCount && setPageIndex(pageCount - 1)}
+            onClick={() => {
+              pendingPaginationScrollRef.current = "bottom";
+              pageCount && setPageIndex(pageCount - 1);
+            }}
             disabled={pageCount === 0 || pageIndex >= pageCount - 1}
           >
             Last <LastIcon className="w-4 h-4" />
