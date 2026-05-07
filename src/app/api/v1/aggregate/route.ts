@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { Trace } from "@/types/trace";
 import {
-  aggregateAIEvents,
-  aggregateGlobalContext
+  aggregateMutationEvents,
 } from "./aggregate";
 import { transformation } from "./transformation";
 
@@ -115,8 +114,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: rawError.message }, { status: 500 });
   }
 
-  const aiAggregatedTraces = aggregateAIEvents(newTraces, lastTraces);
-  const aggregatedTraces = aggregateGlobalContext(aiAggregatedTraces);
+  const aggregatedTraces = aggregateMutationEvents(newTraces, lastTraces);
   if (newTraces.length > 0) {
     // insert aggregated traces
     const execute = async (data: Trace) => {

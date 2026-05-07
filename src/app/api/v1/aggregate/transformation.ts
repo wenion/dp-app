@@ -37,12 +37,6 @@ export function getPageType(url: string): "AI" | "editor" | "other" {
   return "other";
 }
 
-function extractTurnNumber(id?: string | null): string | null {
-  if (!id) return null;
-  const match = id.match(/conversation-turn-(\d+)/);
-  return match ? match[1] : null;
-}
-
 type TransformationResult = {
   inserted: number;
   errors: PostgrestSingleResponse<null>["error"][];
@@ -122,7 +116,8 @@ export async function transformation(
       }
     }
     else if (trace.event_type === "mutation") {
-      event_id = extractTurnNumber(trace.session_id);
+      event_type = author == "AI" ? "ai_response" : "user_query";
+      event_id = trace.name ?? null;
       container_id = trace.session_id;
     }
     else if (trace.event_type === "keystroke") {

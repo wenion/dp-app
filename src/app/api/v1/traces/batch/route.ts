@@ -153,8 +153,8 @@ export async function POST(req: Request) {
 
   const admin = await createAdminClient();
 
-  /* --- ADD FILTER --- */
-  /* ------------------------- Deduplicate (keep last mutation, preserve order) -------------------------- */
+  /* --- ADD FILTER BEFORE INSERTING INTO RAW_TRACES --- */
+  /* --- Deduplicate (in continuous traces, keep last mutation, preserve order) --- */
   const seen = new Set<string>();
   const traces: typeof tracesRaw = [];
 
