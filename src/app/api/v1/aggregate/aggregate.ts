@@ -44,6 +44,10 @@ export function aggregateMutationEvents(traces: RawTrace[], lastTraces: RawTrace
         if (prev && prev.tag === "DIV") {
           const prevMessage = prev.message?.slice(0, 10);
           if (prevMessage && current.message?.startsWith(prevMessage)) {
+            // remove duplicated response
+            results.pop();
+          }
+          if (prev.author === "human" && current.author === "human") {
             results.pop();
           }
         }
