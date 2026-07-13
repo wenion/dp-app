@@ -1,4 +1,4 @@
-import { PostgrestSingleResponse } from "@supabase/supabase-js";
+// import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { RawTrace } from "@/types/raw-trace";
 import { Trace } from "@/types/trace";
 
@@ -37,13 +37,13 @@ export function getPageType(url: string): "AI" | "editor" | "other" {
   return "other";
 }
 
-type TransformationResult = {
-  inserted: number;
-  errors: PostgrestSingleResponse<null>["error"][];
-};
+// type TransformationResult = {
+//   inserted: number;
+//   errors: PostgrestSingleResponse<null>["error"][];
+// };
 
 /* Transform RawTraces To Traces */
-export async function transformation(
+export function transformation(
   traces: RawTrace[],
   version: string,
 ) {
@@ -162,6 +162,7 @@ export async function transformation(
       version
     };
 
+    return transformed;
 
   });
 }
