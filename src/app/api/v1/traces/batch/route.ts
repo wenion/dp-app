@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { transformation } from "./transformation";
 
 import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -101,13 +102,12 @@ export async function POST(req: Request) {
   /* ------------------------- Transform traces -------------------------- */
   const tracesRaw = payload.map((p: any, index: number) =>
     compact({
-      source: p.source ?? "unknown",
+      source: "deprecated",
       session_id: p.sessionId ?? null,
       user_id: userId,
 
       // event metadata
       event_type: p.eventType ?? null,
-      event_id: p.eventId ?? null,
       timestamp: p.timestamp ?? p.timeStamp ?? null,
 
       // DOM / UI context
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
       name: p.name ?? null,
       placeholder: p.placeholder ?? null,
       text_content: sanitizeString(p.textContent) ?? null,
-      x_path: p.xpath ?? p.xPath ?? null,
+      x_path: p.xpath ?? null,
       container_id: p.containerId ?? null,
 
       // geometry
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       origin_value: p.originValue ?? null,
       value_type: p.valueType ?? null,
       value_index: p.valueIndex ?? null,
-      value_label: p.label ?? null,
+      value_label: p.valueLabel ?? null,
       direction: p.direction ?? null,
 
       // keyboard
@@ -143,6 +143,7 @@ export async function POST(req: Request) {
       message: sanitizeString(p.message) ?? null,
       event_value: p.eventValue ?? null,
       event_state: p.eventState ?? null,
+      event_id: p.eventId ?? null,
       start_position: p.startPosition ?? null,
       end_position: p.endPosition ?? null,
 
@@ -155,33 +156,51 @@ export async function POST(req: Request) {
 
   /* --- ADD FILTER BEFORE INSERTING INTO RAW_TRACES --- */
   /* --- Deduplicate (in continuous traces, keep last mutation, preserve order) --- */
-  const traces: typeof tracesRaw = [];
-  let prev = null;
+  // const traces: typeof tracesRaw = [];
+  // let prev = null;
 
-  for (const current of tracesRaw) {
-    if (
-      prev && prev.source === "Mutation" && prev.tag === "SECTION" &&
-      current.source === "Mutation" && current.tag === "SECTION" &&
-      prev.session_id === current.session_id
-    ) {
-      traces.pop();
-    }
+  // for (const current of tracesRaw) {
+  //   if (
+  //     prev && prev.source === "Mutation" && prev.tag === "SECTION" &&
+  //     current.source === "Mutation" && current.tag === "SECTION" &&
+  //     prev.session_id === current.session_id
+  //   ) {
+  //     traces.pop();
+  //   }
 
-    traces.push(current);
-    prev = current;
-  }
+  //   traces.push(current);
+  //   prev = current;
+  // }
 
   const { data, error } = await admin
     .from("raw_traces")
-    .insert(traces)
+    .insert(tracesRaw)
     .select("id");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 },
+    );
   }
 
-  // Supabase does NOT guarantee order → fix it
-  const ids = traces.map((_, i) => data?.[i]?.id).filter(Boolean);
+  const traces = transformation(
+    tracesRaw,
+    "v2",
+  );
 
-  return NextResponse.json({ ids });
+  const { error: transformError } = await admin
+    .from("traces")
+    .insert(traces);
+
+  if (transformError) {
+    return NextResponse.json(
+      { error: transformError.message },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({
+    ids: data?.map(row => row.id) ?? [],
+  });
 }

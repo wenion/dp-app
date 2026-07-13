@@ -395,9 +395,9 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
       eventTypeFilter: eventTypeFilter ?? "",
     });
 
-    await fetch("/api/v1/aggregate",{
-      method: "POST",
-    });
+    // await fetch("/api/v1/aggregate",{
+    //   method: "POST",
+    // });
 
     try {
       const response = await fetch(`/api/traces?${params.toString()}`);
