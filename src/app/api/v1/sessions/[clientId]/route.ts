@@ -69,28 +69,9 @@ async function getUserId(
   return user.id;
 }
 
-type SessionRow = {
-  // id: number;
-  client_id: string;
-  user_id: string;
-
-  name: string | null;
-
-  started_at: number;
-  ended_at: number | null;
-
-  event_count: number;
-
-  capture_state: Session["captureState"];
-
-  upload_status: Session["uploadStatus"];
-
-  urls: string[] | null;
-};
-
 function toSession(row: SessionRow): Session {
   return {
-    ref: row.id,
+    // ref: row.id,
 
     clientId: row.client_id,
 

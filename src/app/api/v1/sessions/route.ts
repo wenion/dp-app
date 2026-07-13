@@ -50,11 +50,13 @@ async function getUserId(req: Request): Promise<string | NextResponse> {
 function toSession(row: SessionRow): Session {
   return {
     // ref: row.id,
+
     clientId: row.client_id,
-    name: row.name,
+
+    name: row.name ?? undefined,
 
     startedAt: row.started_at,
-    endedAt: row.ended_at,
+    endedAt: row.ended_at ?? undefined,
 
     eventCount: row.event_count,
 
