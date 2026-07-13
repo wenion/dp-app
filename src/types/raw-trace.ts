@@ -1,6 +1,6 @@
-export type RawTrace = {
-  id: number;
-  created_at: string; // timestamptz → ISO string
+export type RawTraceInsert = {
+  // id: number;
+  // created_at: string; // timestamptz → ISO string
 
   // source & identity
   source: string;
@@ -50,4 +50,9 @@ export type RawTrace = {
 
   // attribution
   author: string | null;
+};
+
+export type RawTrace = RawTraceInsert & {
+  id: number;
+  created_at: string;
 };

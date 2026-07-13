@@ -7,6 +7,8 @@ import { transformation } from "./transformation";
 import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from "@/utils/supabase/admin";
 
+import { RawTraceInsert } from "@/types/raw-trace";
+
 function getBearerToken(req: Request): string | null {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return null;
@@ -100,8 +102,7 @@ export async function POST(req: Request) {
   }
 
   /* ------------------------- Transform traces -------------------------- */
-  const tracesRaw = payload.map((p: any, index: number) =>
-    compact({
+  const tracesRaw: RawTraceInsert[] = payload.map((p) => ({
       source: "deprecated",
       session_id: p.sessionId ?? null,
       user_id: userId,

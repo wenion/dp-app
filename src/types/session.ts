@@ -1,3 +1,9 @@
+export type UploadStatus =
+  | "waiting"
+  | "uploading"
+  | "uploaded"
+  | "failed";
+
 export interface Session {
   clientId: string;
   ref?: number;
