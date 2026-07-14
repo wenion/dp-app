@@ -3,20 +3,15 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient as createServerClient } from '@/utils/supabase/server'
 import { createAdminClient } from "@/utils/supabase/admin";
+
+import { RawTraceRow, RawTrace } from "@/types/raw-trace";
 
 function getBearerToken(req: Request): string | null {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return null;
   return auth.slice(7);
-}
-
-/** Remove undefined fields so Supabase insert is clean */
-function compact<T extends Record<string, any>>(obj: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined)
-  ) as Partial<T>
 }
 
 export async function POST(req: Request) {
@@ -71,7 +66,7 @@ export async function POST(req: Request) {
     }
   } else {
     // 2) If called by web app: Supabase session cookie
-    const supabase = await createClient();
+    const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -149,4 +144,123 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json(data);
+}
+
+async function getUserId(req: Request): Promise<string | NextResponse> {
+  const bearer = getBearerToken(req);
+
+  if (bearer) {
+    try {
+      const payload = jwt.verify(
+        bearer,
+        process.env.EXTENSION_JWT_SECRET!
+      ) as { sub?: string; scope?: string };
+
+      if (payload.scope !== "extension" || !payload.sub) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      return payload.sub;
+    } catch {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+  }
+
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return user.id;
+}
+
+function toTrace(row: RawTraceRow): RawTrace {
+  console.log("row", row.session_id)
+  return {
+    sessionId: row.session_id ?? "",
+    // userId: row.user_id,
+
+    eventType: row.event_type?? "",
+    eventId: row.event_id?? "",
+    timestamp: row.timestamp?? 0,
+
+    url: row.url?? "",
+    tag: row.tag?? "",
+    elementType: row.element_type?? "",
+    name: row.name?? "",
+    placeholder: row.placeholder?? "",
+    textContent: row.text_content?? "",
+    xpath: row.x_path ?? undefined,
+    containerId: row.container_id?? undefined,
+
+    clientX: row.client_x ?? undefined,
+    clientY: row.client_y ?? undefined,
+    width: row.width ?? undefined,
+    height: row.height ?? undefined,
+
+    valueName: row.value_name ?? undefined,
+    originValue: row.origin_value ?? undefined,
+    valueType: row.value_type ?? undefined,
+    valueIndex: row.value_index ?? undefined,
+    valueLabel: row.value_label ?? undefined,
+    direction: row.direction ?? undefined,
+
+    code: row.code ?? undefined,
+    key: row.key ?? undefined,
+
+    label: row.label ?? undefined,
+    message: row.message ?? undefined,
+    eventValue: row.event_value ?? undefined,
+    eventState: row.event_state ?? undefined,
+    startPosition: row.start_position ?? undefined,
+    endPosition: row.end_position ?? undefined,
+
+    author: row.author ?? undefined,
+    tabId: 0,
+    windowId: 0,
+    sessionStart: 0,
+  };
+}
+
+export async function GET(req: Request) {
+  const userId = await getUserId(req);
+
+  if (userId instanceof NextResponse) {
+    return userId;
+  }
+
+  const admin = createAdminClient();
+
+  const { searchParams } = new URL(req.url);
+  const sessionId = searchParams.get("sessionId");
+
+  if (!sessionId) {
+    return NextResponse.json(
+      { error: "sessionId is required" },
+      { status: 400 }
+    );
+  }
+
+  const { data, error } = await admin
+    .from("raw_traces")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("session_id", sessionId)
+    .order("timestamp", {
+      ascending: true,
+    });
+
+  if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+  return NextResponse.json((data as RawTraceRow[]).map(toTrace));
 }

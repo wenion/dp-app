@@ -1,6 +1,6 @@
 // import { PostgrestSingleResponse } from "@supabase/supabase-js";
-import { RawTrace, RawTraceInsert } from "@/types/raw-trace";
-import { Trace } from "@/types/trace";
+import { RawTraceRow } from "@/types/raw-trace";
+import { TraceRow } from "@/types/trace";
 
 const trim = (v?: string | null) => (v ?? "").trim();
 
@@ -44,7 +44,7 @@ export function getPageType(url: string): "AI" | "editor" | "other" {
 
 /* Transform RawTraces To Traces */
 export function transformation(
-  traces: RawTraceInsert[],
+  traces: RawTraceRow[],
   version: string,
 ) {
   return traces.map((trace) => {
@@ -127,7 +127,7 @@ export function transformation(
     else if (trace.event_type === "paste") {
     }
 
-    const transformed: Trace = {
+    const transformed = {
       event_type: event_type,
       user_id: trace.user_id,
 

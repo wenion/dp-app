@@ -1,6 +1,6 @@
-export type Trace = {
-  id?: number;
-  created_at?: string; // timestamptz → ISO string
+export type TraceRow = {
+  id: number;
+  created_at: string; // timestamptz (ISO 8601)
 
   event_type: string | null;
   user_id: string | null; // uuid

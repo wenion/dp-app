@@ -8,6 +8,11 @@ import { createAdminClient } from "@/utils/supabase/admin";
 
 import type { Session, SessionRow } from "@/types/session";
 
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 5000;
+const MAX_PAGE_SIZE = 10000;
+
 function getBearerToken(req: Request): string | null {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return null;
@@ -119,26 +124,89 @@ export async function GET(req: Request) {
   const admin = createAdminClient();
 
   const { searchParams } = new URL(req.url);
+  const statusParam = searchParams.get("status");
+  const rangeParam = searchParams.get("range");
+  const queryParam = searchParams.get("q");
   const limitParam = searchParams.get("limit");
+  const pageParam = searchParams.get("page");
+  const pageSizeParam = searchParams.get("pageSize");
+
+  const page = Math.max(
+    Number(pageParam) || DEFAULT_PAGE,
+    1,
+  );
+
+  const pageSize = Math.min(
+    Math.max(Number(pageSizeParam) || DEFAULT_PAGE_SIZE, 1),
+    MAX_PAGE_SIZE,
+  );
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = admin
     .from("sessions")
-    .select("*")
-    .eq("user_id", userId)
-    .order("started_at", {
-      ascending: false,
-    });
+    .select("*", {
+      count: "exact",
+    })
+    .eq("user_id", userId);
 
-  if (limitParam !== null) {
-    const limit = Math.min(
-      Math.max(parseInt(limitParam, 10) || 0, 1),
-      20,
+  if (
+    statusParam === "uploaded" ||
+    statusParam === "failed"
+  ) {
+    query = query.eq(
+      "upload_status",
+      statusParam
     );
-
-    query = query.limit(limit);
   }
 
-  const { data, error } = await query;
+  if (rangeParam && rangeParam !== "all") {
+    const now = Date.now();
+
+    switch (rangeParam) {
+      case "today": {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+
+        query = query.gte(
+          "started_at",
+          start.getTime(),
+        );
+        break;
+      }
+
+      case "7d":
+        query = query.gte(
+          "started_at",
+          now - 7 * 24 * 60 * 60 * 1000,
+        );
+        break;
+
+      case "30d":
+        query = query.gte(
+          "started_at",
+          now - 30 * 24 * 60 * 60 * 1000,
+        );
+        break;
+    }
+  }
+
+  if (queryParam?.trim()) {
+    query = query.ilike(
+      "name",
+      `%${queryParam.trim()}%`
+    );
+  }
+
+  query = query
+    .order("started_at", {
+      ascending: false,
+    })
+    .range(from, to);
+
+
+  const { data, error, count, } = await query;
 
   if (error) {
     return NextResponse.json(
@@ -151,7 +219,17 @@ export async function GET(req: Request) {
     );
   }
 
-  return NextResponse.json(
-    (data as SessionRow[]).map(toSession),
-  );
+  if (limitParam) {
+    return NextResponse.json(
+      (data as SessionRow[]).map(toSession),
+    );
+  }
+  return NextResponse.json({
+    items: (data as SessionRow[]).map(toSession),
+    pagination: {
+      page,
+      pageSize,
+      total: count ?? 0,
+    },
+  });
 }

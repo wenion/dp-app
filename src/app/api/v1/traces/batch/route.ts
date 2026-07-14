@@ -7,8 +7,6 @@ import { transformation } from "./transformation";
 import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from "@/utils/supabase/admin";
 
-import { RawTraceInsert } from "@/types/raw-trace";
-
 function getBearerToken(req: Request): string | null {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return null;
@@ -26,12 +24,6 @@ function sanitizeString(str: string | null | undefined): string | null {
   );
 }
 
-/** Remove undefined fields so Supabase insert is clean */
-function compact<T extends Record<string, any>>(obj: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined)
-  ) as Partial<T>
-}
 
 export async function POST(req: Request) {
   /* ------------------------ Content-Type guard ------------------------ */
@@ -102,81 +94,63 @@ export async function POST(req: Request) {
   }
 
   /* ------------------------- Transform traces -------------------------- */
-  const tracesRaw: RawTraceInsert[] = payload.map((p) => ({
-      source: "deprecated",
-      session_id: p.sessionId ?? null,
-      user_id: userId,
+  const rows = payload.map((p) => ({
+    source: "deprecated",
+    session_id: p.sessionId ?? null,
+    user_id: userId,
 
-      // event metadata
-      event_type: p.eventType ?? null,
-      timestamp: p.timestamp ?? p.timeStamp ?? null,
+    // event metadata
+    event_type: p.eventType ?? null,
+    timestamp: p.timestamp ?? p.timeStamp ?? null,
 
-      // DOM / UI context
-      url: p.url ?? null,
-      tag: p.tag ?? null,
-      element_type: p.elementType ?? null,
-      name: p.name ?? null,
-      placeholder: p.placeholder ?? null,
-      text_content: sanitizeString(p.textContent) ?? null,
-      x_path: p.xpath ?? null,
-      container_id: p.containerId ?? null,
+    // DOM / UI context
+    url: p.url ?? null,
+    tag: p.tag ?? null,
+    element_type: p.elementType ?? null,
+    name: p.name ?? null,
+    placeholder: p.placeholder ?? null,
+    text_content: sanitizeString(p.textContent) ?? null,
+    x_path: p.xpath ?? null,
+    container_id: p.containerId ?? null,
 
-      // geometry
-      client_x: p.clientX ?? null,
-      client_y: p.clientY ?? null,
-      width: p.width ?? null,
-      height: p.height ?? null,
+    // geometry
+    client_x: p.clientX ?? null,
+    client_y: p.clientY ?? null,
+    width: p.width ?? null,
+    height: p.height ?? null,
 
-      // value / state
-      value_name: p.valueName ?? null,
-      origin_value: p.originValue ?? null,
-      value_type: p.valueType ?? null,
-      value_index: p.valueIndex ?? null,
-      value_label: p.valueLabel ?? null,
-      direction: p.direction ?? null,
+    // value / state
+    value_name: p.valueName ?? null,
+    origin_value: p.originValue ?? null,
+    value_type: p.valueType ?? null,
+    value_index: p.valueIndex ?? null,
+    value_label: p.valueLabel ?? null,
+    direction: p.direction ?? null,
 
-      // keyboard
-      code: p.code ?? null,
-      key: p.key ?? null,
+    // keyboard
+    code: p.code ?? null,
+    key: p.key ?? null,
 
-      // message & state
-      label: p.label ?? null,
-      message: sanitizeString(p.message) ?? null,
-      event_value: p.eventValue ?? null,
-      event_state: p.eventState ?? null,
-      event_id: p.eventId ?? null,
-      start_position: p.startPosition ?? null,
-      end_position: p.endPosition ?? null,
+    // message & state
+    label: p.label ?? null,
+    message: sanitizeString(p.message) ?? null,
+    event_value: p.eventValue ?? null,
+    event_state: p.eventState ?? null,
+    event_id: p.eventId ?? null,
+    start_position: p.startPosition ?? null,
+    end_position: p.endPosition ?? null,
 
-      // attribution
-      author: p.author ?? null,
+    // attribution
+    author: p.author ?? null,
     })
   );
 
   const admin = await createAdminClient();
 
-  /* --- ADD FILTER BEFORE INSERTING INTO RAW_TRACES --- */
-  /* --- Deduplicate (in continuous traces, keep last mutation, preserve order) --- */
-  // const traces: typeof tracesRaw = [];
-  // let prev = null;
-
-  // for (const current of tracesRaw) {
-  //   if (
-  //     prev && prev.source === "Mutation" && prev.tag === "SECTION" &&
-  //     current.source === "Mutation" && current.tag === "SECTION" &&
-  //     prev.session_id === current.session_id
-  //   ) {
-  //     traces.pop();
-  //   }
-
-  //   traces.push(current);
-  //   prev = current;
-  // }
-
   const { data, error } = await admin
     .from("raw_traces")
-    .insert(tracesRaw)
-    .select("id");
+    .insert(rows)
+    .select();
 
   if (error) {
     return NextResponse.json(
@@ -186,7 +160,7 @@ export async function POST(req: Request) {
   }
 
   const traces = transformation(
-    tracesRaw,
+    data,
     "v2",
   );
 
