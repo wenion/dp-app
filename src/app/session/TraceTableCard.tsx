@@ -98,6 +98,7 @@ export function TraceTableCard() {
             </div>
 
             <Button
+              className="cursor-pointer"
               variant="outline"
               size="sm"
               onClick={() => setOpen(true)}
