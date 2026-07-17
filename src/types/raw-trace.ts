@@ -50,6 +50,9 @@ export type RawTraceRow = {
 
   // attribution
   author: string | null;
+  tab_id: number | null;
+  window_id: number | null;
+  sequence: number | null;
 };
 
 export type UserEvent = {
@@ -99,7 +102,7 @@ export type UserEvent = {
   // streamId?: number;
   author?: string;
   containerId?: number;
-  // source: TraceSource;
+  source?: string;
 };
 
 export type TraceContext = {
@@ -108,7 +111,8 @@ export type TraceContext = {
   sessionEnd?: number;
 
   tabId: number;
-  windowId: number;
+  windowId?: number;
+  sequence?: number;
 
   url: string;
 };

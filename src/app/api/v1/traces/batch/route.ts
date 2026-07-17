@@ -95,13 +95,13 @@ export async function POST(req: Request) {
 
   /* ------------------------- Transform traces -------------------------- */
   const rows = payload.map((p) => ({
-    source: "deprecated",
+    source: p.source ?? "deprecated",
     session_id: p.sessionId ?? null,
     user_id: userId,
 
     // event metadata
     event_type: p.eventType ?? null,
-    timestamp: p.timestamp ?? p.timeStamp ?? null,
+    timestamp: p.timestamp ?? null,
 
     // DOM / UI context
     url: p.url ?? null,
@@ -142,6 +142,12 @@ export async function POST(req: Request) {
 
     // attribution
     author: p.author ?? null,
+
+    // session_start: p.sessionStart ?? null,
+    // session_end: p.sessionEnd ?? null,
+    tab_id: p.tabId ?? null,
+    window_id: p.windowId ?? null,
+    sequence: p.sequence ?? null,
     })
   );
 

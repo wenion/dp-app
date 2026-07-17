@@ -112,7 +112,7 @@ export function transformation(
       }
     }
     else if (trace.event_type === "mutation") {
-      event_type = author == "AI" ? "ai_response" : "user_query";
+      event_type = author === "AI" ? "ai_response" : "user_query";
       event_id = trace.name ?? null;
       container_id = trace.session_id;
     }
@@ -158,6 +158,9 @@ export function transformation(
         trace.timestamp != null
           ? new Date(trace.timestamp).toISOString()
           : null,
+
+      session_id: trace.session_id,
+      sequence: trace.sequence,
 
       version
     };

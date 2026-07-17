@@ -22,14 +22,25 @@ import {
 import { useSession } from "./Context";
 import { TraceViewerModal } from "./TraceViewerModal";
 
-import type { RawTrace } from "@/types/raw-trace";
+import type { TraceRow } from "@/types/trace";
 
+
+type Pagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+type TraceListResponse = {
+  items: TraceRow[];
+  pagination: Pagination;
+};
 
 export function TraceTableCard() {
   
   const { selectedSession } = useSession();
 
-  const [traces, setTraces] = useState<RawTrace[]>([]);
+  const [traces, setTraces] = useState<TraceRow[]>([]);
   const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -51,15 +62,15 @@ export function TraceTableCard() {
         sessionId: selectedSession.clientId,
       });
 
-      const response = await fetch(`/api/v1/traces?${params.toString()}`);
+      const response = await fetch(`/api/traces?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch sessions.");
       }
 
-      const data: RawTrace[] = await response.json();
+      const data: TraceListResponse = await response.json();
 
-      setTraces(data);
+      setTraces(data.items);
 
     } catch (err) {
       console.error(err);
@@ -73,6 +84,28 @@ export function TraceTableCard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const formatTime = (event_time: string | null) => {
+    if (!event_time) return "-";
+
+    return new Date(event_time).toLocaleTimeString([], {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      fractionalSecondDigits: 3,
+    });
+  }
+
+  const formatURL = (url: string | null) => {
+    if (!url) return "-";
+
+    try {
+      return new URL(url).hostname
+    } catch {
+      return "_";
+    }
+  }
 
   return (
     <>
@@ -114,20 +147,20 @@ export function TraceTableCard() {
 
           <ScrollArea className="h-full">
 
-            <Table>
+            <Table className="table-fixed">
 
               <TableHeader>
 
                 <TableRow>
 
-                  <TableHead>Time</TableHead>
-                  <TableHead>Event</TableHead>
-                  <TableHead>Tag</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>URL</TableHead>
+                  <TableHead className="w-28">Time</TableHead>
+                  <TableHead className="w-28">Event</TableHead>
+                  <TableHead className="w-36">URL</TableHead>
+                  <TableHead className="max-w-[220px]">Message</TableHead>
+                  <TableHead className="w-24">Start Position</TableHead>
+                  <TableHead className="w-24">End Position</TableHead>
+                  <TableHead className="w-24">Value</TableHead>
+                  <TableHead className="max-w-[220px]">State</TableHead>
 
                 </TableRow>
 
@@ -137,35 +170,39 @@ export function TraceTableCard() {
 
                 {traces.map((trace, index) => (
                   <TableRow key={index}>
-                    <TableCell>
-                      {new Date(trace.timestamp).toLocaleTimeString()}
+                    <TableCell className="w-28">
+                      {trace.event_time ? formatTime(trace.event_time) : ""}
                     </TableCell>
 
-                    <TableCell>{trace.eventType}</TableCell>
+                    <TableCell className="w-28 truncate">{trace.event_type}</TableCell>
 
-                    <TableCell>{trace.tag}</TableCell>
-
-                    <TableCell>
-                      {trace.name || trace.placeholder || "-"}
+                    <TableCell
+                      className="max-w-[220px] truncate"
+                      title={trace.url ?? ""}
+                    >
+                      {formatURL(trace.url)}
                     </TableCell>
 
                     <TableCell>
-                      {trace.eventValue ??
-                        trace.textContent ??
-                        trace.valueLabel ??
-                        trace.originValue ??
-                        "-"}
-                    </TableCell>
-
-                    <TableCell className="max-w-sm truncate">
                       {trace.message ?? "-"}
                     </TableCell>
 
-                    <TableCell>{trace.author ?? "-"}</TableCell>
-
-                    <TableCell className="max-w-xs truncate">
-                      {trace.url}
+                    <TableCell>
+                      {trace.cursor_position}
                     </TableCell>
+
+                    <TableCell>
+                      {trace.end_position}
+                    </TableCell>
+
+                    <TableCell className="w-24">
+                      {trace.event_value}
+                    </TableCell>
+
+                    <TableCell className="max-w-[220px] truncate">
+                      {trace.event_state}
+                    </TableCell>
+
                   </TableRow>
                 ))}
 

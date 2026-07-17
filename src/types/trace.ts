@@ -28,4 +28,6 @@ export type TraceRow = {
   event_id: string | null;
   event_time: string | null; // timestamptz → ISO string
   version: string | null;
+  session_id: string | null;
+  sequence: string | null;
 };

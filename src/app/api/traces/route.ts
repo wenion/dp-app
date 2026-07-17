@@ -103,13 +103,13 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-      items: data,
-      pagination: {
-        page,
-        pageSize,
-        total: count ?? 0,
-      },
-    });
+    items: data,
+    pagination: {
+      page,
+      pageSize,
+      total: count ?? 0,
+    },
+  });
 }
 
 // export async function GET(request: NextRequest) {
