@@ -207,7 +207,7 @@ export function TraceViewerModal({
 
                     <TooltipCell value={trace.container_id ?? "-"} width="max-w-[100px]" />
 
-                    <TableCell>{trace.event_state ?? "-"}</TableCell>
+                    <TooltipCell value={trace.event_state ?? ""} width="max-w-[100px]" />
 
                     <TooltipCell value={trace.event_id ?? "-"} width="max-w-[100px]" />
 

@@ -157,8 +157,8 @@ export function TraceTableCard() {
                   <TableHead className="w-28">Event</TableHead>
                   <TableHead className="w-36">URL</TableHead>
                   <TableHead className="max-w-[220px]">Message</TableHead>
-                  <TableHead className="w-24">Start Position</TableHead>
-                  <TableHead className="w-24">End Position</TableHead>
+                  <TableHead className="w-24">Start Pos</TableHead>
+                  <TableHead className="w-24">End Pos</TableHead>
                   <TableHead className="w-24">Value</TableHead>
                   <TableHead className="max-w-[220px]">State</TableHead>
 
@@ -183,7 +183,7 @@ export function TraceTableCard() {
                       {formatURL(trace.url)}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="max-w-[220px] truncate">
                       {trace.message ?? "-"}
                     </TableCell>
 
