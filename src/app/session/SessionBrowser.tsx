@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
-
 import { Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,9 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import type { Session } from "@/types/session";
-
 import { useSession } from "./Context";
+
+import type { Session } from "@/types/session";
 
 
 type SessionResponse = {
@@ -43,13 +42,10 @@ export function SessionBrowser() {
     selectedSession,
     setSelectedSession
   } = useSession();
-  // const searchParams = useSearchParams();
-  // const router = useRouter();
-  // const pathname = usePathname();
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const [range, setRange] = useState("7");
+  const [range, setRange] = useState("7d");
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
@@ -60,7 +56,9 @@ export function SessionBrowser() {
 
   const [page, setPage] = useState(1);
   const pageSize = 5;
-  // const [pageSize] = useState(5);
+  const [status, setStatus] = useState<
+    "all" | "waiting" | "uploading" | "uploaded" | "failed"
+  >("all");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -126,8 +124,8 @@ export function SessionBrowser() {
   }, [debouncedKeyword, range]);
 
   useEffect(() => {
-    setPage((prev) => (prev === 1 ? prev : 1));
-  }, [debouncedKeyword, range]);
+    setPage(1);
+  }, [debouncedKeyword, range, status]);
 
   useEffect(() => {
     return () => {
@@ -139,18 +137,28 @@ export function SessionBrowser() {
     fetchData();
   }, [fetchData]);
 
+  const filteredSessions = useMemo(() => {
+    if (status === "all") {
+      return sessions;
+    }
+
+    return sessions.filter(
+      (s) => s.uploadStatus === status
+    );
+  }, [sessions, status]);
+
   const pagedSessions = useMemo(() => {
     const start = (page - 1) * pageSize;
 
-    return sessions.slice(
+    return filteredSessions.slice(
       start,
       start + pageSize
     );
-  }, [sessions, page, pageSize]);
+  }, [filteredSessions, page, pageSize]);
 
   const totalPages = Math.max(
     1,
-    Math.ceil(sessions.length / pageSize)
+    Math.ceil(filteredSessions.length / pageSize)
   );
 
   const visiblePages = useMemo(() => {
@@ -204,7 +212,25 @@ export function SessionBrowser() {
           />
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex gap-2">
+          <Select
+            value={status}
+            onValueChange={(v) =>
+              setStatus(v as typeof status)
+            }
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="waiting">Waiting</SelectItem>
+              <SelectItem value="uploading">Uploading</SelectItem>
+              <SelectItem value="uploaded">Uploaded</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
           <Select
             value={range}
             onValueChange={setRange}
@@ -214,9 +240,9 @@ export function SessionBrowser() {
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="1">Today</SelectItem>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
               <SelectItem value="all">All</SelectItem>
             </SelectContent>
           </Select>

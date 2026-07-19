@@ -18,7 +18,6 @@ import { SessionContent } from "./SessionContent";
 export default function SessionExplorerPage() {
   const [collapsed, setCollapsed] = useState(false);
 
-
   return (
     <SessionProvider>
       <div className="flex h-full flex-col p-6">
@@ -50,7 +49,6 @@ export default function SessionExplorerPage() {
             </Button>
           </div>
 
-          {/* Right */}
           <ResizablePanel defaultSize={collapsed ? 100 : 72}>
             <SessionContent />
           </ResizablePanel>
