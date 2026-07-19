@@ -21,6 +21,7 @@ import {
 
 import { useSession } from "./Context";
 import { TraceViewerModal } from "./TraceViewerModal";
+import { ExportDataButton } from "./ExportDataButton";
 
 import type { TraceRow } from "@/types/trace";
 
@@ -113,13 +114,13 @@ export function TraceTableCard() {
 
         <CardHeader>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-8">
 
             <CardTitle>
               Session Trace
             </CardTitle>
 
-            <div className="relative w-64">
+            <div className="flex flex-grow ml-64 relative w-36">
 
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
 
@@ -130,14 +131,19 @@ export function TraceTableCard() {
 
             </div>
 
-            <Button
-              className="cursor-pointer"
-              variant="outline"
-              size="sm"
-              onClick={() => setOpen(true)}
-            >
-              <Maximize2 className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center space-x-4">
+              <ExportDataButton traces={traces} />
+
+              <Button
+                className="cursor-pointer"
+                variant="outline"
+                size="sm"
+                onClick={() => setOpen(true)}
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+
+            </div>
 
           </div>
 
