@@ -1,10 +1,11 @@
 import { SessionDetailsCard } from "./SessionDetailsCard";
 import { TraceTableCard } from "./TraceTableCard";
 
-import { useSession } from "./Context";
+import { useSelectedSession } from "./Context";
 
 export function SessionContent() {
-  const { selectedSession } = useSession();
+  const selectedSession =
+    useSelectedSession();
 
   return (
     <div className="flex h-full min-h-0 flex-col">

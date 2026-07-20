@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useSearchParams,
+  useRouter,
+  usePathname,
+} from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
@@ -23,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useSession } from "./Context";
+import { useSession, useSelectedSession } from "./Context";
 
 import type { Session } from "@/types/session";
 
@@ -38,16 +43,19 @@ type SessionResponse = {
 };
 
 export function SessionBrowser() {
-  const {
-    selectedSession,
-    setSelectedSession
-  } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const clientId = searchParams.get("clientId");
+
+  const { sessions, setSessions } = useSession();
+  const selectedSession = useSelectedSession();
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const [range, setRange] = useState("7d");
 
-  const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -147,6 +155,26 @@ export function SessionBrowser() {
     );
   }, [sessions, status]);
 
+  useEffect(() => {
+    if (!sessions.length || !clientId) {
+      return;
+    }
+
+    const index = filteredSessions.findIndex(
+      (s) => s.clientId === clientId
+    );
+
+    if (index === -1) {
+      return;
+    }
+
+    setPage(Math.floor(index / pageSize) + 1);
+  }, [
+    filteredSessions,
+    clientId,
+    pageSize,
+  ]);
+
   const pagedSessions = useMemo(() => {
     const start = (page - 1) * pageSize;
 
@@ -222,6 +250,7 @@ export function SessionBrowser() {
             <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>
+            <div className="flex flex-grow"></div>
 
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
@@ -258,7 +287,14 @@ export function SessionBrowser() {
           {pagedSessions.map((session, index) => (
             <Card
               key={session.clientId}
-              onClick={() => setSelectedSession(session)}
+              onClick={() => {
+                router.replace(
+                  `${pathname}?clientId=${session.clientId}`,
+                  {
+                    scroll: false,
+                  }
+                );
+              }}
               className={cn(
                 "cursor-pointer transition-colors hover:bg-muted",
                 selectedSession?.clientId === session.clientId && "border-primary bg-muted"

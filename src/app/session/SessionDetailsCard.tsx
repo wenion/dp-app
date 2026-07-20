@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { useSession } from "./Context";
+import { useSelectedSession } from "./Context";
 
 
 function formatDuration(
@@ -33,7 +33,7 @@ function formatDuration(
 }
 
 export function SessionDetailsCard() {
-  const { selectedSession } = useSession();
+  const selectedSession = useSelectedSession();
 
   if (!selectedSession) {
     return null;

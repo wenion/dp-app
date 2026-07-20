@@ -1,11 +1,12 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 
 import type { Session } from "@/types/session";
 
 
 type SessionContextValue = {
-  selectedSession: Session | null;
-  setSelectedSession: (session: Session | null) => void;
+  sessions: Session[];
+  setSessions: (sessions: Session[]) => void;
 };
 
 export const SessionContext =
@@ -21,4 +22,24 @@ export function useSession() {
   }
 
   return context;
+}
+
+export function useSelectedSession() {
+  const { sessions } = useSession();
+
+  const searchParams = useSearchParams();
+
+  const clientId = searchParams.get("clientId");
+
+  return useMemo(() => {
+    if (!clientId) {
+      return null;
+    }
+
+    return (
+      sessions.find(
+        (s) => s.clientId === clientId
+      ) ?? null
+    );
+  }, [sessions, clientId]);
 }

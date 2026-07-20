@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useSession } from "./Context";
+import { useSelectedSession } from "./Context";
 import { TraceViewerModal } from "./TraceViewerModal";
 import { ExportDataButton } from "./ExportDataButton";
 
@@ -38,8 +38,9 @@ type TraceListResponse = {
 };
 
 export function TraceTableCard() {
-  
-  const { selectedSession } = useSession();
+
+  const selectedSession =
+    useSelectedSession();
 
   const [traces, setTraces] = useState<TraceRow[]>([]);
   const [open, setOpen] = useState(false);

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { Session } from "@/types/session";
 
@@ -10,19 +10,15 @@ export function SessionProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [selectedSession, setSelectedSession] =
-    useState<Session | null>(null);
-
-  const value = useMemo(
-    () => ({
-      selectedSession,
-      setSelectedSession,
-    }),
-    [selectedSession,]
-  );
+  const [sessions, setSessions] = useState<Session[]>([]);
 
   return (
-    <SessionContext.Provider value={value}>
+    <SessionContext.Provider
+      value={{
+        sessions,
+        setSessions,
+      }}
+    >
       {children}
     </SessionContext.Provider>
   );
