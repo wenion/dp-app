@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown } from 'lucide-react';
 
 import { useAppContext } from "@/components/Layouts/context";
-import { useSession } from "./Context";
+import { useSelectedSession } from "./Context";
 
 import type { TraceRow } from "@/types/trace";
 
@@ -18,7 +18,7 @@ export function ExportDataButton({
 }: ExportDataButtonProp
 ) {
   const { session } = useAppContext();
-  const { selectedSession } = useSession();
+  const selectedSession = useSelectedSession();
 
   const [data, setData] = useState<TraceRow[]>(traces);
 
