@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FileDown } from 'lucide-react';
@@ -15,26 +15,30 @@ type ExportDataButtonProp = {
 
 export function ExportDataButton({
   traces
-}: ExportDataButtonProp
-) {
+}: ExportDataButtonProp) {
   const { session } = useAppContext();
   const selectedSession = useSelectedSession();
 
-  const [data, setData] = useState<TraceRow[]>(traces);
-
   const userName = useMemo(() => {
-    return session?.user?.identities?.[0]?.identity_data?.name + "_" || "";
+    return (
+      session?.user?.identities?.[0]?.identity_data?.name
+        ? `${session.user.identities[0].identity_data.name}_`
+        : ""
+    );
   }, [session]);
 
   const downloadCSV = (rows: TraceRow[], filename: string) => {
-    if (!rows.length) return;
+    if (!rows.length) {
+      console.log("No rows");
+      return;
+    }
 
     const headers = Object.keys(rows[0]);
     const csv = [
       headers.join(","),
       ...rows.map(row =>
         headers.map(h =>
-          JSON.stringify((row as any)[h] ?? "")
+          JSON.stringify((row as Record<string, unknown>)[h] ?? "")
         ).join(",")
       ),
     ].join("\n");
@@ -42,10 +46,13 @@ export function ExportDataButton({
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
     URL.revokeObjectURL(url);
   };
@@ -56,7 +63,7 @@ export function ExportDataButton({
       selectedSession?.name?? selectedSession?.clientId
     }.csv`;
 
-    downloadCSV(data, filename);
+    downloadCSV(traces, filename);
   };
 
   return (
