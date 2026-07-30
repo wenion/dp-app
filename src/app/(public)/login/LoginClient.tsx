@@ -38,7 +38,7 @@ export default function LoginClient({ next }: { next: string }) {
 
         <div className="mt-6 text-center">
           <p>
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <Link href="/auth/sign-up" className="text-primary underline-offset-4 hover:underline">
               Sign up
             </Link>
