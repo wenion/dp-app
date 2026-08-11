@@ -118,21 +118,24 @@ export async function GET(
     .select("*")
     .eq("user_id", userId)
     .eq("client_id", clientId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json(
-      {
-        error: error.message,
-      },
-      {
-        status: 404,
-      },
+      { error: error.message },
+      { status: 500 },
+    );
+  }
+
+  if (!data) {
+    return NextResponse.json(
+      { error: "Session not found" },
+      { status: 404 },
     );
   }
 
   return NextResponse.json(
-    toSession(data as SessionRow),
+    toSession(data),
   );
 }
 
