@@ -83,8 +83,13 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({
-    token: accessToken,
     accessToken: accessToken,
     refreshToken: refreshToken,
-  });
+  },
+  {
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+        },
+    }
+);
 }
