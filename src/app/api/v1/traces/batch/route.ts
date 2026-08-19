@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
   /* ------------------------ Payload size guard ------------------------ */
   const rawBody = await req.text()
-  if (rawBody.length > 200_000) {
+  if (rawBody.length > 5_000_000) {
     return NextResponse.json(
       { error: 'Payload too large' },
       { status: 413 }

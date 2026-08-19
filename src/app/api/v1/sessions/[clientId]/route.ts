@@ -200,7 +200,7 @@ export async function POST(
     .eq("user_id", userId)
     .eq("client_id", clientId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json(
@@ -209,6 +209,17 @@ export async function POST(
       },
       {
         status: 500,
+      },
+    );
+  }
+
+  if (!data) {
+    return NextResponse.json(
+      {
+        error: "Session not found",
+      },
+      {
+        status: 404,
       },
     );
   }

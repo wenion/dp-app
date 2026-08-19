@@ -86,17 +86,22 @@ export async function POST(req: Request) {
 
   const { data, error } = await admin
     .from("sessions")
-    .upsert({
-      client_id: session.clientId,
-      user_id: userId,
-      name: session.name ?? null,
-      started_at: session.startedAt,
-      ended_at: session.endedAt ?? null,
-      event_count: session.eventCount ?? 0,
-      capture_state: session.captureState,
-      upload_status: session.uploadStatus,
-      urls: session.urls ?? [],
-    })
+    .upsert(
+      {
+        client_id: session.clientId,
+        user_id: userId,
+        name: session.name ?? null,
+        started_at: session.startedAt,
+        ended_at: session.endedAt ?? null,
+        event_count: session.eventCount ?? 0,
+        capture_state: session.captureState,
+        upload_status: session.uploadStatus,
+        urls: session.urls ?? [],
+      },
+      {
+        onConflict: "client_id",
+      },
+    )
     .select()
     .single();
 
