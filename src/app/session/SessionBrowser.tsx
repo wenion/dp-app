@@ -8,12 +8,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Pagination,
   PaginationContent,
@@ -63,7 +59,7 @@ export function SessionBrowser() {
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
 
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 11;
   const [status, setStatus] = useState<
     "all" | "waiting" | "uploading" | "uploaded" | "failed"
   >("all");
@@ -218,147 +214,231 @@ export function SessionBrowser() {
   }, [page, totalPages]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
 
-      <div className="border-b p-4 space-y-4">
-
+      {/* Header */}
+      <div className="space-y-3 border-b px-4 py-3">
         <div>
-          <h2 className="font-semibold">Sessions</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-sm font-semibold">
+            Sessions
+          </h2>
+
+          <p className="text-xs text-muted-foreground">
             Browse recorded sessions
           </p>
         </div>
 
+        {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
           <Input
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Search session..."
+            onChange={event =>
+              setKeyword(event.target.value)
+            }
+            placeholder="Search sessions..."
             className="pl-9"
           />
         </div>
 
+        {/* Filters */}
         <div className="flex gap-2">
           <Select
             value={status}
-            onValueChange={(v) =>
-              setStatus(v as typeof status)
+            onValueChange={value =>
+              setStatus(value as typeof status)
             }
           >
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="min-w-0 flex-1">
               <SelectValue />
             </SelectTrigger>
-            <div className="flex flex-grow"></div>
 
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="waiting">Waiting</SelectItem>
-              <SelectItem value="uploading">Uploading</SelectItem>
-              <SelectItem value="uploaded">Uploaded</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="all">
+                All Status
+              </SelectItem>
+
+              <SelectItem value="waiting">
+                Waiting
+              </SelectItem>
+
+              <SelectItem value="uploading">
+                Uploading
+              </SelectItem>
+
+              <SelectItem value="uploaded">
+                Uploaded
+              </SelectItem>
+
+              <SelectItem value="failed">
+                Failed
+              </SelectItem>
             </SelectContent>
           </Select>
+
           <Select
             value={range}
             onValueChange={setRange}
           >
-            <SelectTrigger>
+            <SelectTrigger className="min-w-0 flex-1">
               <SelectValue />
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="today">
+                Today
+              </SelectItem>
+
+              <SelectItem value="7d">
+                Last 7 days
+              </SelectItem>
+
+              <SelectItem value="30d">
+                Last 30 days
+              </SelectItem>
+
+              <SelectItem value="all">
+                All
+              </SelectItem>
             </SelectContent>
           </Select>
-
         </div>
-
       </div>
 
-      <ScrollArea className="flex-1">
+      {/* Sessions */}
+      <ScrollArea className="min-h-0 flex-1">
+        <div>
+          {loading && (
+            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+              Loading sessions...
+            </div>
+          )}
 
-        <div className="p-2 space-y-2">
+          {!loading && error && (
+            <div className="px-4 py-8 text-center text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
-          {pagedSessions.map((session, index) => (
-            <Card
-              key={session.clientId}
-              onClick={() => {
-                router.replace(
-                  `${pathname}?clientId=${session.clientId}`,
-                  {
-                    scroll: false,
-                  }
-                );
-              }}
-              className={cn(
-                "cursor-pointer transition-colors hover:bg-muted",
-                selectedSession?.clientId === session.clientId && "border-primary bg-muted"
-              )}
-            >
-              <CardContent>
-                <div className="flex items-start justify-between">
-                  <div
-                    className={cn(
-                      "truncate font-medium",
-                      !session.name &&
-                        "italic text-muted-foreground"
-                    )}
-                  >
-                    {session.name ?? "Untitled session"}
+          {!loading &&
+            !error &&
+            pagedSessions.length === 0 && (
+              <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                No sessions found.
+              </div>
+            )}
+
+          {!loading &&
+            !error &&
+            pagedSessions.map(session => {
+              const isSelected =
+                selectedSession?.clientId ===
+                session.clientId;
+
+              return (
+                <button
+                  key={session.clientId}
+                  type="button"
+                  onClick={() => {
+                    router.replace(
+                      `${pathname}?clientId=${session.clientId}`,
+                      {
+                        scroll: false,
+                      },
+                    );
+                  }}
+                  className={cn(
+                    `
+                      relative block w-full
+                      border-b px-4 py-3
+                      text-left
+                      transition-colors
+                      hover:bg-muted/50
+                    `,
+                    isSelected &&
+                      "bg-violet-50 hover:bg-violet-50",
+                  )}
+                >
+                  {/* Selected indicator */}
+                  {isSelected && (
+                    <div className="absolute inset-y-0 left-0 w-0.5 bg-violet-600" />
+                  )}
+
+                  {/* Name + status */}
+                  <div className="flex min-w-0 items-center justify-between gap-3">
+                    <div
+                      className={cn(
+                        "min-w-0 truncate text-sm font-medium",
+                        !session.name &&
+                          "italic text-muted-foreground",
+                      )}
+                    >
+                      {session.name ??
+                        "Untitled session"}
+                    </div>
+
+                    <Badge
+                      variant="secondary"
+                      className="shrink-0"
+                    >
+                      {session.uploadStatus}
+                    </Badge>
                   </div>
 
-                  <Badge variant="secondary">
-                    {session.uploadStatus}
-                  </Badge>
-                </div>
+                  {/* Metadata */}
+                  <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <span className="truncate">
+                      {new Date(
+                        session.startedAt,
+                      ).toLocaleString()}
+                    </span>
 
-                <div className="mt-2 text-sm text-muted-foreground">
-                  {new Date(session.startedAt).toLocaleString()}
-                </div>
-
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {session.eventCount.toLocaleString()} events
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
+                    <span className="shrink-0 tabular-nums">
+                      {session.eventCount.toLocaleString()}{" "}
+                      events
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
         </div>
-
       </ScrollArea>
 
-      <div className="border-t p-3">
+      {/* Pagination */}
+      <div className="shrink-0 border-t px-3 py-2">
         <Pagination>
           <PaginationContent>
-
             <PaginationItem>
               <PaginationLink
                 href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (page > 1) setPage(page - 1);
+                onClick={event => {
+                  event.preventDefault();
+
+                  if (page > 1) {
+                    setPage(page - 1);
+                  }
                 }}
               >
                 {"<"}
               </PaginationLink>
             </PaginationItem>
 
-            {visiblePages.map((p) => (
-              <PaginationItem key={p}>
+            {visiblePages.map(currentPage => (
+              <PaginationItem
+                key={currentPage}
+              >
                 <PaginationLink
                   href="#"
-                  isActive={p === page}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setPage(p);
+                  isActive={
+                    currentPage === page
+                  }
+                  onClick={event => {
+                    event.preventDefault();
+                    setPage(currentPage);
                   }}
                 >
-                  {p}
+                  {currentPage}
                 </PaginationLink>
               </PaginationItem>
             ))}
@@ -366,15 +446,17 @@ export function SessionBrowser() {
             <PaginationItem>
               <PaginationLink
                 href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (page < totalPages) setPage(page + 1);
+                onClick={event => {
+                  event.preventDefault();
+
+                  if (page < totalPages) {
+                    setPage(page + 1);
+                  }
                 }}
               >
                 {">"}
               </PaginationLink>
             </PaginationItem>
-
           </PaginationContent>
         </Pagination>
       </div>
