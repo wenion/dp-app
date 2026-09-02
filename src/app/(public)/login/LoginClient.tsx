@@ -25,7 +25,7 @@ export default function LoginClient({ next }: { next: string }) {
 
         <GoogleSigninButton text="Sign in" next={next} />
 
-        <div className="my-6 flex items-center justify-center">
+        {/* <div className="my-6 flex items-center justify-center">
           <div className="flex-1 border-t" />
           <div className="mx-3 flex h-8 w-8 items-center justify-center rounded-full border">
             <span className="text-xs">or</span>
@@ -43,7 +43,7 @@ export default function LoginClient({ next }: { next: string }) {
               Sign up
             </Link>
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

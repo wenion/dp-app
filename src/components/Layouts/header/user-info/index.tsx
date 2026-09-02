@@ -44,7 +44,7 @@ export function UserInfo({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <figure className="flex items-center content-center gap-3">
+        <figure className="flex cursor-pointer items-center content-center gap-3">
           {image && (
             <div className="relative h-10 w-10">
               <Image
