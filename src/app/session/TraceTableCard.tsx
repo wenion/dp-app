@@ -263,6 +263,28 @@ export function TraceTableCard() {
     }
   };
 
+  const formatTraceValue = (
+    value: string | null | undefined,
+  ) => {
+    if (value == null || value === "") {
+      return "-";
+    }
+
+    const specialValues: Record<
+      string,
+      string
+    > = {
+      " ": "[Space]",
+      "\n": "[Enter]",
+      "\t": "[Tab]",
+    };
+
+    return (
+      specialValues[value] ??
+      value
+    );
+  }
+
   return (
     <>
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -534,7 +556,7 @@ export function TraceTableCard() {
 
                           {columns.value && (
                             <TableCell className="max-w-[200px] truncate font-mono text-xs">
-                              {trace.event_value ?? "-"}
+                              {formatTraceValue(trace.event_value) ?? "-"}
                             </TableCell>
                           )}
 
@@ -588,7 +610,7 @@ export function TraceTableCard() {
                                   </div>
 
                                   <div className="whitespace-pre-wrap font-mono text-xs text-foreground">
-                                    {trace.event_value ?? "-"}
+                                    {formatTraceValue(trace.event_value) ?? "-"}
                                   </div>
                                 </div>
 
