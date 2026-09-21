@@ -214,15 +214,30 @@ export function TraceTableCard() {
     });
 
     return rows.sort((a, b) => {
-      const left =
+      const leftTime =
         a.event_time ?? "";
 
-      const right =
+      const rightTime =
         b.event_time ?? "";
 
+      const timeCompare =
+        leftTime.localeCompare(rightTime);
+
+      if (timeCompare !== 0) {
+        return sortDirection === "asc"
+          ? timeCompare
+          : -timeCompare;
+      }
+
+      const leftSequence =
+        Number(a.sequence ?? 0);
+
+      const rightSequence =
+        Number(b.sequence ?? 0);
+
       return sortDirection === "asc"
-        ? left.localeCompare(right)
-        : right.localeCompare(left);
+        ? leftSequence - rightSequence
+        : rightSequence - leftSequence;
     });
   }, [
     traces,
