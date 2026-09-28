@@ -9,6 +9,7 @@ import {
     User as UserIcon,
     Database as DatabaseIcon,
     ChevronUp as ChevronUpIcon,
+    MonitorDot as MonitorDotIcon,
 } from "lucide-react";
 
 import {
@@ -39,6 +40,38 @@ export function UserInfo({
   const handleLogout = async () => {
     const { error } = await signOut();
     router.push("/login");
+  };
+
+  const handleActiveSessions = () => {
+    const extId = process.env.NEXT_PUBLIC_EXTENSION_ID;
+
+    if (!extId) {
+      console.error("Extension ID is not configured");
+      return;
+    }
+
+    if (!(window as any).chrome?.runtime) {
+      window.alert("Chrome extension API is not available");
+      // show your UI notification here
+      return;
+    }
+
+    (window as any).chrome.runtime.sendMessage(
+      extId,
+      {
+        type: "OPEN_OPTIONS",
+      },
+      (_response: any) => {
+        const lastError = (window as any).chrome.runtime.lastError;
+
+        if (lastError) {
+          window.alert("Extension is not installed or unavailable");
+          // show notification:
+          // "Chrome extension is not installed."
+          return;
+        }
+      },
+    );
   };
 
   return (
@@ -92,6 +125,13 @@ export function UserInfo({
           <DropdownMenuItem className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
             <UserIcon />
             View profile
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer"
+            onClick={handleActiveSessions}
+          >
+            <MonitorDotIcon />
+            Active Sessions
           </DropdownMenuItem>
           <DropdownMenuItem className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
             <a href="/session" className="flex items-center gap-3 w-full">
