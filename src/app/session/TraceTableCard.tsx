@@ -208,37 +208,13 @@ export function TraceTableCard() {
         .join(" ")
         .toLowerCase();
 
-      return searchable.includes(
-        normalizedQuery,
-      );
+      return searchable.includes(normalizedQuery);
     });
 
-    return rows.sort((a, b) => {
-      const leftTime =
-        a.event_time ?? "";
+    return sortDirection === "desc"
+      ? rows
+      : [...rows].reverse();
 
-      const rightTime =
-        b.event_time ?? "";
-
-      const timeCompare =
-        leftTime.localeCompare(rightTime);
-
-      if (timeCompare !== 0) {
-        return sortDirection === "asc"
-          ? timeCompare
-          : -timeCompare;
-      }
-
-      const leftSequence =
-        Number(a.sequence ?? 0);
-
-      const rightSequence =
-        Number(b.sequence ?? 0);
-
-      return sortDirection === "asc"
-        ? leftSequence - rightSequence
-        : rightSequence - leftSequence;
-    });
   }, [
     traces,
     query,
