@@ -91,6 +91,10 @@ export async function GET(req: NextRequest) {
 
   query = query
     .order("event_time", { ascending: false, nullsFirst: false,})
+    .order("sequence", {
+      ascending: false,
+      nullsFirst: false,
+    })
     .range(from, to)
 
   const { data, error, count } = await query;
