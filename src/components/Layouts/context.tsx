@@ -12,9 +12,14 @@ import type { Provider } from "@supabase/supabase-js";
 
 import { createClient } from "@/utils/supabase/client";
 
+type Profile = {
+  id: string;
+  role: string;
+};
 
 type ContextType = {
   session: Session | null;
+  profile: Profile | null;
   loading: boolean;
 
   signInWithGoogle: ({
@@ -42,6 +47,7 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,6 +82,43 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
       subscription?.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    const userId = session?.user.id;
+
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    setProfile(null);
+
+    async function fetchProfile() {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Failed to fetch profile:", error);
+        setProfile(null);
+        return;
+      }
+
+      setProfile(data);
+    }
+
+    fetchProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user.id]);
 
   // Actions
   const signInWithGoogle = async ({
@@ -114,14 +157,14 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<ContextType>(
     () => ({
-      // Auth
       session,
+      profile,
       loading,
       signInWithGoogle,
       signOut,
       refreshSession,
     }),
-    [session, loading]
+    [session, profile, loading]
   );
 
   return (

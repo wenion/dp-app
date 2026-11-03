@@ -4,12 +4,13 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-    LogOut as LogOutIcon,
-    SettingsIcon,
-    User as UserIcon,
-    Database as DatabaseIcon,
-    ChevronUp as ChevronUpIcon,
-    MonitorDot as MonitorDotIcon,
+  LogOut as LogOutIcon,
+  SettingsIcon,
+  User as UserIcon,
+  Database as DatabaseIcon,
+  ChevronUp as ChevronUpIcon,
+  MonitorDot as MonitorDotIcon,
+  ShieldCheck as ShieldCheckIcon,
 } from "lucide-react";
 
 import {
@@ -33,7 +34,7 @@ export function UserInfo({
   name?: string;
   email?: string;
 }) {
-  const { signOut } = useAppContext();
+  const { signOut, profile } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
@@ -73,6 +74,8 @@ export function UserInfo({
       },
     );
   };
+
+  const isAdmin = profile?.role === "admin";
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -139,6 +142,15 @@ export function UserInfo({
               View data
             </a>
           </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem
+              className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer"
+              onSelect={() => router.push("/admin")}
+            >
+              <ShieldCheckIcon />
+              Admin Page
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem className="p-2 text-base cursor-pointer text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
             <SettingsIcon />
             Account Settings
