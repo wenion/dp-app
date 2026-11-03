@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Settings2,
   Users,
+  ShieldBan,
 } from "lucide-react";
 
 const ADMIN_MODULES = [
@@ -22,6 +23,13 @@ const ADMIN_MODULES = [
       "View user profiles, roles, sessions, and trace counts.",
     href: "/admin/profiles",
     icon: Users,
+  },
+  {
+    title: "Site Blacklist",
+    description:
+      "Manage websites that are permanently excluded from recording.",
+    href: "/admin/site-blacklist",
+    icon: ShieldBan,
   },
 ];
 
