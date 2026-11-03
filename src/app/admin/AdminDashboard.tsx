@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Settings2,
+  Users,
 } from "lucide-react";
 
 const ADMIN_MODULES = [
@@ -14,6 +15,13 @@ const ADMIN_MODULES = [
       "Manage DOM selectors for supported AI platforms.",
     href: "/admin/mutation-configs",
     icon: Settings2,
+  },
+  {
+    title: "Profiles",
+    description:
+      "View user profiles, roles, sessions, and trace counts.",
+    href: "/admin/profiles",
+    icon: Users,
   },
 ];
 
@@ -73,7 +81,9 @@ export default function AdminDashboard() {
 
                   {/* Footer */}
                   <div className="mt-6 flex items-center gap-2 text-xs font-medium text-sky-700">
-                    Manage configurations
+                    {module.title === "Profiles"
+                        ? "View profiles"
+                        : "Manage configurations"}
 
                     <ArrowRight
                       size={14}

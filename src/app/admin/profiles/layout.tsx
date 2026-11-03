@@ -1,0 +1,11 @@
+export default function ProfilesLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      {children}
+    </div>
+  );
+}
