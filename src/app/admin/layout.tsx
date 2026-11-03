@@ -7,6 +7,8 @@ import Link from "next/link";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 
+import { AdminNavigation } from "./admin-navigation";
+
 export default async function AdminLayout({
   children,
 }: {
@@ -50,6 +52,8 @@ export default async function AdminLayout({
       />
 
       <Header />
+
+      {isAdmin && <AdminNavigation />}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {isAdmin ? (

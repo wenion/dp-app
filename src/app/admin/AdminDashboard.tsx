@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   ArrowUpRight,
+  Boxes,
   Settings2,
-  Users,
   ShieldBan,
+  Users,
 } from "lucide-react";
 
 const ADMIN_MODULES = [
@@ -30,6 +31,13 @@ const ADMIN_MODULES = [
       "Manage websites that are permanently excluded from recording.",
     href: "/admin/site-blacklist",
     icon: ShieldBan,
+  },
+  {
+    title: "Extension Versions",
+    description:
+      "Manage immutable extension release configurations.",
+    href: "/admin/extension-versions",
+    icon: Boxes,
   },
 ];
 
