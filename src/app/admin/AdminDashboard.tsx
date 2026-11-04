@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Boxes,
+  Monitor,
   Settings2,
   ShieldBan,
   Users,
@@ -38,6 +39,12 @@ const ADMIN_MODULES = [
       "Manage immutable extension release configurations.",
     href: "/admin/extension-versions",
     icon: Boxes,
+  },
+  {
+    title: "Extension Clients",
+    description: "View registered installations and versions.",
+    href: "/admin/extension-clients",
+    icon: Monitor,
   },
 ];
 
