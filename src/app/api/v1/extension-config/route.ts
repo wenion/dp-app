@@ -117,32 +117,16 @@ export async function POST(request: Request) {
 
   const body = payload as Record<string, unknown>;
 
-  const clientId = body.clientId;
   const extensionVersion = body.extensionVersion;
   const configVersion = body.configVersion;
 
-  if (
-    typeof clientId !== "string" ||
-    !clientId.trim() ||
-    clientId.length > 36 ||
-    typeof extensionVersion !== "string" ||
-    !extensionVersion.trim() ||
-    extensionVersion.length > 50 ||
-    (
-      configVersion !== undefined &&
-      configVersion !== null &&
-      (
-        typeof configVersion !== "string" ||
-        !configVersion.trim() ||
-        configVersion.length > 50
-      )
-    )
-  ) {
-    return NextResponse.json(
-      { error: "Invalid clientId or versions" },
-      { status: 400 },
-    );
-  }
+  // Use provided client ID or generate a new one
+  const clientId =
+    typeof body.clientId === "string" &&
+    body.clientId.trim() &&
+    body.clientId.length <= 36
+      ? body.clientId
+      : crypto.randomUUID();
 
   // Store null when no remote config is in use
   const currentConfigVersion =
@@ -164,7 +148,7 @@ export async function POST(request: Request) {
         last_seen_at: new Date().toISOString(),
       },
       {
-        onConflict: "user_id,client_id",
+        onConflict: "user_id, client_id",
       },
     );
 
@@ -205,6 +189,7 @@ export async function POST(request: Request) {
   if (!versionRow) {
     return NextResponse.json(
       {
+        clientId,
         extensionVersion,
         configVersion: null,
         configFound: false,
@@ -268,6 +253,7 @@ export async function POST(request: Request) {
   // 7. Return published config
   return NextResponse.json(
     {
+      clientId,
       extensionVersion,
       configVersion: versionRow.version,
       configFound: true,
