@@ -116,19 +116,6 @@ export function ContextProvider({
     void refreshSession();
   }, [refreshSession]);
 
-  // Refresh auth state when returning to the browser tab.
-  useEffect(() => {
-    const handleFocus = () => {
-      void refreshSession();
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [refreshSession]);
-
   // Start Google OAuth through the server.
   const signInWithGoogle = useCallback(
     async ({
