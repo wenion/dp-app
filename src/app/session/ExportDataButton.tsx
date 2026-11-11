@@ -1,49 +1,61 @@
-import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
-import { FileDown } from 'lucide-react';
+import { FileDown } from "lucide-react";
 
 import { useAppContext } from "@/components/Layouts/context";
 import { useSelectedSession } from "./Context";
 
 import type { TraceRow } from "@/types/trace";
 
-
 type ExportDataButtonProp = {
   traces: TraceRow[];
 };
 
 export function ExportDataButton({
-  traces
+  traces,
 }: ExportDataButtonProp) {
   const { session } = useAppContext();
   const selectedSession = useSelectedSession();
 
-  const userName = useMemo(() => {
-    return (
-      session?.user?.identities?.[0]?.identity_data?.name
-        ? `${session.user.identities[0].identity_data.name}_`
-        : ""
-    );
-  }, [session]);
+  // Get the current user's name from the simplified session.
+  const name =
+    session?.user.name ??
+    session?.user.email?.split("@")[0];
 
-  const downloadCSV = (rows: TraceRow[], filename: string) => {
+  const safeName = name
+    ?.trim()
+    .replace(/[^a-zA-Z0-9_-]/g, "_");
+
+  const userName = safeName ? `${safeName}_` : "";
+
+  const downloadCSV = (
+    rows: TraceRow[],
+    filename: string,
+  ) => {
     if (!rows.length) {
       console.log("No rows");
       return;
     }
 
     const headers = Object.keys(rows[0]);
+
     const csv = [
       headers.join(","),
-      ...rows.map(row =>
-        headers.map(h =>
-          JSON.stringify((row as Record<string, unknown>)[h] ?? "")
-        ).join(",")
+      ...rows.map((row) =>
+        headers
+          .map((h) =>
+            JSON.stringify(
+              (row as Record<string, unknown>)[h] ?? "",
+            ),
+          )
+          .join(","),
       ),
     ].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
@@ -57,11 +69,19 @@ export function ExportDataButton({
     URL.revokeObjectURL(url);
   };
 
-  const exportData = async () => {
+  const exportData = () => {
+    const sessionName =
+      selectedSession?.name ??
+      selectedSession?.clientId ??
+      "unknown";
 
-    const filename = `${userName}traces_${
-      selectedSession?.name?? selectedSession?.clientId
-    }.csv`;
+    const safeSessionName = sessionName.replace(
+      /[^a-zA-Z0-9_-]/g,
+      "_",
+    );
+
+    const filename =
+      `${userName}traces_${safeSessionName}.csv`;
 
     downloadCSV(traces, filename);
   };
@@ -71,9 +91,10 @@ export function ExportDataButton({
       className="cursor-pointer"
       variant="outline"
       size="sm"
-      onClick={() => exportData()}
+      onClick={exportData}
     >
-      <FileDown/>Export All
+      <FileDown />
+      Export All
     </Button>
   );
 }

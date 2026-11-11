@@ -1,16 +1,25 @@
+
 "use client";
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import { Session } from "@supabase/supabase-js";
+
 import type { Provider } from "@supabase/supabase-js";
 
-import { createClient } from "@/utils/supabase/client";
+type AppSession = {
+  user: {
+    id: string;
+    email: string | null;
+    name: string | null;
+    avatar_url: string | null;
+  };
+};
 
 type Profile = {
   id: string;
@@ -18,142 +27,166 @@ type Profile = {
 };
 
 type ContextType = {
-  session: Session | null;
+  session: AppSession | null;
   profile: Profile | null;
   loading: boolean;
 
   signInWithGoogle: ({
     provider,
-    next
-  } : {
+    next,
+  }: {
     provider: Provider;
-    next: string
+    next: string;
   }) => Promise<{ error: Error | null }>;
+
   signOut: () => Promise<{ error: Error | null }>;
+
   refreshSession: () => Promise<void>;
+};
+
+type SessionResponse = {
+  session: AppSession | null;
+  profile: Profile | null;
 };
 
 const Context = createContext<ContextType | null>(null);
 
 export function useAppContext() {
   const context = useContext(Context);
+
   if (!context) {
-    throw new Error("useAppContext must be used within a ContextProvider");
+    throw new Error(
+      "useAppContext must be used within a ContextProvider",
+    );
   }
+
   return context;
 }
 
-export function ContextProvider({ children }: { children: React.ReactNode }) {
-  const supabase = createClient();
+export function ContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [session, setSession] =
+    useState<AppSession | null>(null);
 
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] =
+    useState<Profile | null>(null);
+
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
+  // Fetch authenticated user and profile from Next.js.
+  const refreshSession = useCallback(async () => {
+    setLoading(true);
 
-    async function initAuth() {
-      setLoading(true);
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+    try {
+      const response = await fetch("/api/auth/session", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
 
-      if (!isMounted) return;
-
-      if (!error) {
-        setSession(session);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch session: ${response.status}`,
+        );
       }
 
+      const data: SessionResponse =
+        await response.json();
+
+      setSession(data.session);
+      setProfile(data.profile);
+    } catch (error) {
+      console.error(
+        "Failed to refresh session:",
+        error,
+      );
+
+      setSession(null);
+      setProfile(null);
+    } finally {
       setLoading(false);
     }
-
-    initAuth();
-
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
-
-    return () => {
-      isMounted = false;
-      subscription?.subscription.unsubscribe();
-    };
   }, []);
 
+  // Initialize auth state.
   useEffect(() => {
-    const userId = session?.user.id;
+    void refreshSession();
+  }, [refreshSession]);
 
-    if (!userId) {
-      setProfile(null);
-      return;
-    }
+  // Refresh auth state when returning to the browser tab.
+  useEffect(() => {
+    const handleFocus = () => {
+      void refreshSession();
+    };
 
-    let cancelled = false;
-
-    setProfile(null);
-
-    async function fetchProfile() {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, role")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (error) {
-        console.error("Failed to fetch profile:", error);
-        setProfile(null);
-        return;
-      }
-
-      setProfile(data);
-    }
-
-    fetchProfile();
+    window.addEventListener("focus", handleFocus);
 
     return () => {
-      cancelled = true;
+      window.removeEventListener("focus", handleFocus);
     };
-  }, [session?.user.id]);
+  }, [refreshSession]);
 
-  // Actions
-  const signInWithGoogle = async ({
-    provider = "google",
-    next,
-  }: {
-    provider: Provider;
-    next: string;
-  }) => {
-    const { error } = await supabase.auth.signInWithOAuth({
+  // Start Google OAuth through the server.
+  const signInWithGoogle = useCallback(
+    async ({
       provider,
-      options: {
-        redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
+      next,
+    }: {
+      provider: Provider;
+      next: string;
+    }): Promise<{ error: Error | null }> => {
+      if (provider !== "google") {
+        return {
+          error: new Error("Unsupported OAuth provider"),
+        };
+      }
 
-    return { error: error ?? null };
-  };
+      const params = new URLSearchParams({
+        next,
+      });
 
-  const signOut = async () => {
+      window.location.assign(
+        `/api/auth/sign-in?${params.toString()}`,
+      );
+
+      return { error: null };
+    },
+    [],
+  );
+
+  // Sign out through the server.
+  const signOut = useCallback(async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
+
+    try {
+      const response = await fetch("/api/auth/sign-out", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sign out");
+      }
+
       setSession(null);
+      setProfile(null);
+
+      return { error: null };
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Failed to sign out"),
+      };
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    return { error: error ?? null };
-  };
-
-  const refreshSession = async () => {
-    const { data: { session }, error } = await supabase.auth.getSession();
-
-    if (!error)
-      setSession(session);
-  };
+  }, []);
 
   const value = useMemo<ContextType>(
     () => ({
@@ -164,7 +197,14 @@ export function ContextProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshSession,
     }),
-    [session, profile, loading]
+    [
+      session,
+      profile,
+      loading,
+      signInWithGoogle,
+      signOut,
+      refreshSession,
+    ],
   );
 
   return (

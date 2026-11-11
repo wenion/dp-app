@@ -535,8 +535,11 @@ export const TraceTableSupabase: React.FC<TraceTableSupabaseProps> = ({
   };
 
   const userName = useMemo(() => {
-    return session?.user?.identities?.[0]?.identity_data?.name + "_" || "";
+    const name = session?.user.name ?? session?.user.email;
+
+    return name ? `${name}_` : "";
   }, [session]);
+
 
   const exportCurrentPage = async () => {
     downloadCSV(

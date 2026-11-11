@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
@@ -11,22 +12,16 @@ import { Icon } from "./icons";
 import { UserInfo } from "./user-info";
 
 export function Header() {
-  const { session } = useAppContext();
+  const { session, loading } = useAppContext();
   const router = useRouter();
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const userName = useMemo(() => {
-    return session?.user?.identities?.[0]?.identity_data?.name || null;
-  }, [session]);
+  const user = session?.user;
 
-  const email = useMemo(() => {
-    return session?.user?.identities?.[0]?.identity_data?.email || null;
-  }, [session]);
-
-  const avatarUrl = useMemo(() => {
-    return session?.user?.identities?.[0]?.identity_data?.avatar_url || null;
-  }, [session]);
+  const userName = user?.name ?? user?.email ?? undefined;
+  const email = user?.email ?? undefined;
+  const avatarUrl = user?.avatar_url ?? undefined;
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-stroke bg-white shadow-1 dark:border-stroke-dark dark:bg-gray-dark">
@@ -56,27 +51,29 @@ export function Header() {
         <div className="hidden shrink-0 items-center gap-6 lg:flex">
           <Navigation />
 
-          {userName ? (
-            <UserInfo
-              name={userName}
-              email={email}
-              image={avatarUrl}
-            />
-          ) : (
-            <Button
-              variant="outline"
-              aria-label="Login"
-              className="cursor-pointer"
-              onClick={() => router.push("/login")}
-            >
-              Login
-            </Button>
+          {!loading && (
+            user ? (
+              <UserInfo
+                name={userName}
+                email={email}
+                image={avatarUrl}
+              />
+            ) : (
+              <Button
+                variant="outline"
+                aria-label="Login"
+                className="cursor-pointer"
+                onClick={() => router.push("/login")}
+              >
+                Login
+              </Button>
+            )
           )}
         </div>
 
         {/* Mobile / tablet */}
         <div className="ml-3 flex shrink-0 items-center gap-2 lg:hidden">
-          {userName && (
+          {!loading && user && (
             <UserInfo
               name={userName}
               email={email}
@@ -105,7 +102,7 @@ export function Header() {
         <div className="border-t border-stroke px-4 py-4 lg:hidden dark:border-stroke-dark">
           <Navigation />
 
-          {!userName && (
+          {!loading && !user && (
             <Button
               variant="outline"
               className="mt-4 w-full"
